@@ -168,6 +168,10 @@ is what they have to say:
 > seen a Open Source Community providing such a very high level of responsiveness for ANY
 > issue related to Druid setup and tuning.
 
+## PubNative
+
+PubNative uses Druid for its real-time reports and analysis of millions of daily ad views, clicks, conversions and other events. 
+
 ## Redborder
 
 redBorder is an open source, scale out, cybersecurity analytics platform based on Druid. We hope its full-blown web interface, dashboard and report systems, and ready-to-use real-time pipeline foster other Druid users to create a strong community around it. To see more, please visit redborder.org 
