@@ -2,26 +2,23 @@
 layout: doc_page
 ---
 
-# Transforming Dimension Values
+# 转换维值
 
-The following JSON fields can be used in a query to operate on dimension values.
-
+以下的JSON文件可以用来查询维值操作。
 ## DimensionSpec
 
-`DimensionSpec`s define how dimension values get transformed prior to aggregation.
+`DimensionSpec` 在聚合前定义维值如何被转换。
+### 默认 DimensionSpec
 
-### Default DimensionSpec
-
-Returns dimension values as is and optionally renames the dimension.
+返回维值和选择重命名维度。
 
 ```json
 { "type" : "default", "dimension" : <dimension>, "outputName": <output_name> }
 ```
 
-### Extraction DimensionSpec
+### 提取DimensionSpec
 
-Returns dimension values transformed using the given [extraction function](#extraction-functions).
-
+用给定的[extraction function](#extraction-functions)返回维值
 ```json
 {
   "type" : "extraction",
@@ -31,22 +28,19 @@ Returns dimension values transformed using the given [extraction function](#extr
 }
 ```
 
-## Extraction Functions
+## Extraction 函数
 
-Extraction functions define the transformation applied to each dimension value.
+提取函数定义每个维度的变换值。
 
-Transformations can be applied to both regular (string) dimensions, as well
-as the special `__time` dimension, which represents the current time bucket
-according to the query [aggregation granularity](../querying/granularities.html).
+转换可以运用于传统的（string）维，也可以作为特殊的`__time`维，根据查询代表当前time bucket [aggregation granularity](../querying/granularities.html).
 
-**Note**: for functions taking string values (such as regular expressions),
-`__time` dimension values will be formatted in [ISO-8601 format](https://en.wikipedia.org/wiki/ISO_8601)
-before getting passed to the extraction function.
+**注意**: 对于函数用字符串值(比如regular expressions),
+`__time` 维值在通过提取函数之前将会格式化为[ISO-8601 format](https://en.wikipedia.org/wiki/ISO_8601)
 
-### Regular Expression Extraction Function
+### Regular Expression Extraction 函数
 
-Returns the first matching group for the given regular expression.
-If there is no match, it returns the dimension value as is.
+返回第一个匹配的组给给定的regular expression。
+如果没有匹配,它返回维度的值。
 
 ```json
 {
@@ -56,64 +50,55 @@ If there is no match, it returns the dimension value as is.
 }
 ```
 
-For example, using `"expr" : "(\\w\\w\\w).*"` will transform
-`'Monday'`, `'Tuesday'`, `'Wednesday'` into `'Mon'`, `'Tue'`, `'Wed'`.
 
-If the `replaceMissingValue` property is true, the extraction function will transform dimension values that do not match the regex pattern to a user-specified String. Default value is `false`.
+例如，用`"expr" : "(\\w\\w\\w).*"` 将把这些`'Monday'`, `'Tuesday'`, `'Wednesday'` 转换成为 `'Mon'`, `'Tue'`, `'Wed'`.
+    
+如果 `replaceMissingValue`属性是真,提取函数变换维值不匹配正则表达式模式用户指定的字符串。默认值是 `false`。
 
-The `replaceMissingValueWith` property sets the String that unmatched dimension values will be replaced with, if `replaceMissingValue` is true. If `replaceMissingValueWith` is not specified, unmatched dimension values will be replaced with nulls.
+`replaceMissingValueWith`属性设置字符串，如果`replaceMissingValue` 是true，不匹配的维值将会取代它。如果`replaceMissingValueWith` 是没有指明，不匹配的维值将会用空值替代。
+例如，如果`expr` 是`"(a\w+)"`在上面的JSON例子中，regex匹配单词以字母`a`开始,提取函数将维度值如`banana`转换为 `foobar`。
 
-For example, if `expr` is `"(a\w+)"` in the example JSON above, a regex that matches words starting with the letter `a`, the extraction function will convert a dimension value like `banana` to `foobar`.
+### 部分 Extraction Function
 
-
-### Partial Extraction Function
-
-Returns the dimension value unchanged if the regular expression matches, otherwise returns null.
-
+如果regular expression匹配返回维值不变，否则返回null。
 ```json
 { "type" : "partial", "expr" : <regular_expression> }
 ```
 
 ### Search Query Extraction Function
 
-Returns the dimension value unchanged if the given [`SearchQuerySpec`](../querying/searchqueryspec.html)
-matches, otherwise returns null.
+如果给定[`SearchQuerySpec`](../querying/searchqueryspec.html)匹配返回维值不变，否则返回null。
 
 ```json
 { "type" : "searchQuery", "query" : <search_query_spec> }
 ```
 
-### Substring Extraction Function
+### 提取子字符串函数
 
-Returns a substring of the dimension value starting from the supplied index and of the desired length. If the desired
-length exceeds the length of the dimension value, the remainder of the string starting at index will be returned. 
-If index is greater than the length of the dimension value, null will be returned.
 
+从提供的索引和所需的长度返回一个字符串的维度值。如果所需的长度超过维的长度值,字符串的其余部分将从索引返回。
+如果索引大于维度的长度值,将返回null。
 ```json
 { "type" : "substring", "index" : 1, "length" : 4 }
 ```
 
-The length may be omitted for substring to return the remainder of the dimension value starting from index, 
-or null if index greater than the length of the dimension value.
-
+子字符串的长度可以省略从索引返回剩余的维度值，或如果指数大于维度的长度值返回null。
 ```json
 { "type" : "substring", "index" : 3 }
 ```
 
 
-### Time Format Extraction Function
+### 时间格式提取函数
 
-Returns the dimension value formatted according to the given format string, time zone, and locale.
+根据所给定的格式字符串、时区和语言环境返回维度值格式。
 
-For `__time` dimension values, this formats the time value bucketed by the
-[aggregation granularity](../querying/granularities.html)
+对于 `__time`维度值，通过[aggregation granularity](../querying/granularities.html)来区分这个时间值格式
 
-For a regular dimension, it assumes the string is formatted in
-[ISO-8601 date and time format](https://en.wikipedia.org/wiki/ISO_8601).
+对于一个常规的维度，它假设将字符串按[ISO-8601 date and time format](https://en.wikipedia.org/wiki/ISO_8601)格式
 
-* `format` : date time format for the resulting dimension value, in [Joda Time DateTimeFormat](http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html).
-* `locale` : locale (language and country) to use, given as a [IETF BCP 47 language tag](http://www.oracle.com/technetwork/java/javase/java8locales-2095355.html#util-text), e.g. `en-US`, `en-GB`, `fr-FR`, `fr-CA`, etc.
-* `timeZone` : time zone to use in [IANA tz database format](http://en.wikipedia.org/wiki/List_of_tz_database_time_zones), e.g. `Europe/Berlin` (this can possibly be different than the aggregation time-zone)
+* `format` ：产生价值维度的日期时间格式，在[Joda Time DateTimeFormat](http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html).
+* `locale` :locale(语言和国家)使用,作为一个[IETF BCP 47 language tag](http://www.oracle.com/technetwork/java/javase/java8locales-2095355.html#util-text)，例如 `en-US`, `en-GB`, `fr-FR`, `fr-CA`，等。
+* `timeZone` : 时区使用[IANA tz database format](http://en.wikipedia.org/wiki/List_of_tz_database_time_zones)，例如 `Europe/Berlin` (这可能是聚合不同时区)
 
 ```json
 { "type" : "timeFormat",
@@ -122,7 +107,7 @@ For a regular dimension, it assumes the string is formatted in
   "locale" : <locale> (optional) }
 ```
 
-For example, the following dimension spec returns the day of the week for Montréal in French:
+例如，下面的维度说明返回法国Montréal今天是本周中的哪一天：
 
 ```json
 {
@@ -140,16 +125,13 @@ For example, the following dimension spec returns the day of the week for Montr�
 
 ### Time Parsing Extraction Function
 
-Parses dimension values as timestamps using the given input format,
-and returns them formatted using the given output format.
+使用给定的输入格式解析维度值作为时间标记，并使用给定的输出格式返回格式化。
 
-Note, if you are working with the `__time` dimension, you should consider using the
-[time extraction function instead](#time-format-extraction-function) instead,
-which works on time value directly as opposed to string values.
+注意，如果你正在用`__time`维度，你应该考虑用[time extraction function instead](#time-format-extraction-function)替代，
+因为工作时的值和字符串值是截然不同的。
 
-Time formats are described in the
-[SimpleDateFormat documentation](http://icu-project.org/apiref/icu4j/com/ibm/icu/text/SimpleDateFormat.html)
 
+时间格式的描述[SimpleDateFormat documentation](http://icu-project.org/apiref/icu4j/com/ibm/icu/text/SimpleDateFormat.html)
 ```json
 { "type" : "time",
   "timeFormat" : <input_format>,
@@ -157,17 +139,15 @@ Time formats are described in the
 ```
 
 
-### Javascript Extraction Function
+### javascript提取函数
 
-Returns the dimension value, as transformed by the given JavaScript function.
+返回维度值，作为给定的javascript函数的转换
 
-For regular dimensions, the input value is passed as a string.
+常规维度，是将输入值作为字符串传递。
 
-For the `__time` dimension, the input value is passed as a number
-representing the number of milliseconds since January 1, 1970 UTC.
+ `__time` 维度，输入的值是通过一个数字来表示，也是UTC格式1970年1月1日以来的毫秒数
 
-Example for a regular dimension
-
+regular dimension示例
 ```json
 {
   "type" : "javascript",
@@ -183,9 +163,9 @@ Example for a regular dimension
 }
 ```
 
-A property of `injective` specifies if the javascript function preserves uniqueness. The default value is `false` meaning uniqueness is not preserved
+`injective`的属性指定如果javascript函数保持唯一性。默认值为 `false`意义的独特性不存在。
 
-Example for the `__time` dimension:
+`__time`维度的示例:
 
 ```json
 {
@@ -194,12 +174,11 @@ Example for the `__time` dimension:
 }
 ```
 
-### Lookup extraction function
+### Lookup extraction function 
 
-Lookups are a concept in Druid where dimension values are (optionally) replaced with new values. 
-For more documentation on using lookups, please see [here](../querying/lookups.html). 
-Explicit lookups allow you to specify a set of keys and values to use when performing the extraction.
-
+Lookups是Druid在维度值(可选)替换为新的值上的一个概念。
+使用查找更多的文档,请参阅[here](../querying/lookups.html)。
+显式查询允许您指定一组键和值进行提取时使用。
 ```json
 {
   "type":"lookup",
@@ -243,18 +222,18 @@ Explicit lookups allow you to specify a set of keys and values to use when perfo
 }
 ```
 
-A lookup can be of type `namespace` or `map`. A `map` lookup is passed as part of the query. 
-A `namespace` lookup is populated on all the nodes which handle queries as per [lookups](../querying/lookups.html)
+lookup可以是`namespace` 或者`map`类型。`map` lookup是作为查询的一部分通过
 
-A property of `retainMissingValue` and `replaceMissingValueWith` can be specified at query time to hint how to handle missing values. Setting `replaceMissingValueWith` to `""` has the same effect as setting it to `null` or omitting the property. Setting `retainMissingValue` to true will use the dimension's original value if it is not found in the lookup. The default values are `replaceMissingValueWith = null` and `retainMissingValue = false` which causes missing values to be treated as missing.
- 
-It is illegal to set `retainMissingValue = true` and also specify a `replaceMissingValueWith`.
+`namespace`查找是根据处理查询填充在每个节点上[lookups](../querying/lookups.html)
+`retainMissingValue`和`replaceMissingValueWith` 属性可以被指定在查询时提示如何处理缺失值。`replaceMissingValueWith`设置为`""`和设置`null`或省略的属性有同样的效果。
 
-A property of `injective` specifies if optimizations can be used which assume there is no combining of multiple names into one. For example: If ABC123 is the only key that maps to SomeCompany, that can be optimized since it is a unique lookup. But if both ABC123 and DEF456 BOTH map to SomeCompany, then that is NOT a unique lookup. Setting this value to true and setting `retainMissingValue` to FALSE (the default) may cause undesired behavior.
+设置`retainMissingValue = true`是不合法的，还指定一个`replaceMissingValueWith`。
 
-A property `optimize` can be supplied to allow optimization of lookup based extraction filter (by default `optimize = true`). 
-The optimization layer will run on the broker and it will rewrite the extraction filter as clause of selector filters.
-For instance the following filter 
+假设没有将多个组合成一个，`injective`的属性指定就可以使用优化。例如:如果ABC123是唯一的键映射到SomeCompany,那就可以优化,因为它是一个独特的查找。但如果ABC123和DEF456 SomeCompany地图,那不是一个独特的查找。将这个值设置为true和设置`retainMissingValue`为FALSE(默认)可能会导致不希望的行为。
+
+属性`optimize`可以提供允许查询的优化提取过滤器(默认情况下`optimize = true`)。
+优化层将在代理上运行,它将改写提取过滤器选择器过滤器的条款。
+例如下面的filter
 
 ```json
 {
@@ -277,8 +256,7 @@ For instance the following filter
 }
 ```
 
-will be rewritten as
-
+将会被重写成
 ```json
 {
    "filter":{
@@ -305,16 +283,15 @@ will be rewritten as
 
 A null dimension value can be mapped to a specific value by specifying the empty string as the key.
 This allows distinguishing between a null dimension and a lookup resulting in a null.
-For example, specifying `{"":"bar","bat":"baz"}` with dimension values `[null, "foo", "bat"]` and replacing missing values with `"oof"` will yield results of `["bar", "oof", "baz"]`.
-Omitting the empty string key will cause the missing value to take over. For example, specifying `{"bat":"baz"}` with dimension values `[null, "foo", "bat"]` and replacing missing values with `"oof"` will yield results of `["oof", "oof", "baz"]`.
+零维值通过指定为空字符串作为键可以被映射到一个特定的值。
+这可以区分零维度和null结果中的查找
+例如，指定`{"":"bar","bat":"baz"}`和维值`[null, "foo", "bat"]`和替换缺失值`"oof"`将产生 `["bar", "oof", "baz"]`结果。
+省略空字符串键将导致缺失值。例如,指定`{"bat":"baz"}` 与维值`[null, "foo", "bat"]`，用 `"oof"`代替缺失值将产生`["oof", "oof", "baz"]`结果 。
+### Cascade Extraction 函数
 
-### Cascade Extraction Function
-
-Provides chained execution of extraction functions.
-
-A property of `extractionFns` contains an array of any extraction functions, which is executed in the array index order.
-
-Example for chaining [regular expression extraction function](#regular-expression-extraction-function), [javascript extraction function](#javascript-extraction-function), and [substring extraction function](#substring-extraction-function) is as followings.
+提供链接的执行 extraction函数。
+`extractionFns`的属性包括所有提取extraction函数的数组，是按照数组索引的顺序执行。
+例子链接[regular expression extraction function](#regular-expression-extraction-function)， [javascript extraction function](#javascript-extraction-function)，和[substring extraction function](#substring-extraction-function)如下例子所示。
 
 ```json
 {
@@ -338,47 +315,41 @@ Example for chaining [regular expression extraction function](#regular-expressio
 }
 ```
 
-It will transform dimension values with specified extraction functions in the order named.
-For example, `'/druid/prod/historical'` is transformed to `'the dru'` as regular expression extraction function first transforms it to `'druid'` and then, javascript extraction function transforms it to `'the druid'`, and lastly, substring extraction function transforms it to `'the dru'`. 
+它将按照指定extraction functions的名字顺序改变维值。
+例如， `'/druid/prod/historical'`改变为 `'the dru'`过程是regular expression extraction function第一次转换它为 `'druid'`，然后javascript extraction function转换把它为 `'the druid'`，最后，substring extraction function转换将其为`'the dru'`。
 
-### String Format Extraction Function
-
-Returns the dimension value formatted according to the given format string.
+根据给定的格式字符串返回dimension value formatted。
 
 ```json
 { "type" : "stringFormat", "format" : <sprintf_expression> }
 ```
 
-For example if you want to concat "[" and "]" before and after the actual dimension value, you need to specify "[%s]" as format string.
-
+例如如果你想合并"[" and "]"之前和之后的实际dimension value，您需要指定"[%s]" 格式字符串。
 ### Filtered DimensionSpecs
 
-These are only valid for multi-value dimensions. If you have a row in druid that has a multi-value dimension with values ["v1", "v2", "v3"] and you send a groupBy/topN query grouping by that dimension with [query filter](filters.html) for value "v1". In the response you will get 3 rows containing "v1", "v2" and "v3". This behavior might be unintuitive for some use cases.
+这些只是有效的multi-value dimensions。如果你在druid有一行，一个multi-value dimension与值["v1", "v2", "v3"]和根据[query filter](filters.html)值"v1"维度将你发送一个groupBy/topN查询分组。在响应中你会得到3行包含"v1", "v2"和"v3"。这种行为可能是直观的用例。
 
-It happens because "query filter" is internally used on the bitmaps and only used to match the row to be included in the query result processing. With multi-value dimensions, "query filter" behaves like a contains check, which will match the row with dimension value ["v1", "v2", "v3"]. Please see the section on "Multi-value columns" in [segment](../design/segments.html) for more details.
-Then groupBy/topN processing pipeline "explodes" all multi-value dimensions resulting 3 rows for "v1", "v2" and "v3" each.
+这是因为"query filter"是内部使用的 bitmaps,只用于匹配包含查询结果的处理的行。multi-value dimensions,"query filter"像一个包含检查，这将匹配dimension value["v1", "v2", "v3"]的行。请在 [segment](../design/segments.html)参阅"Multi-value columns"更多细节。
 
-In addition to "query filter" which efficiently selects the rows to be processed, you can use the filtered dimension spec to filter for specific values within the values of a multi-value dimension. These dimensionSpecs take a delegate DimensionSpec and a filtering criteria. From the "exploded" rows, only rows matching the given filtering criteria are returned in the query result.
-
-The following filtered dimension spec acts as a whitelist or blacklist for values as per the "isWhitelist" attribute value.
-
+除了"query filter",能有效地选择要处理的行，你可以使用含有一个multi-value dimension值的filtered dimension spec过滤特定的值。
+这些dimensionSpecs委托了DimensionSpec和一个过滤条件。从 "exploded"行，只有行匹配给定的过滤条件返回的查询结果。
+以下filtered dimension spec充当白名单或黑名单过滤值按照"isWhitelist"属性值。
 ```json
 { "type" : "listFiltered", "delegate" : <dimensionSpec>, "values": <array of strings>, "isWhitelist": <optional attribute for true/false, default is true> }
 ```
 
-Following filtered dimension spec retains only the values matching regex. Note that `listFiltered` is faster than this and one should use that for whitelist or blacklist usecase.
+filtered后dimension spec只保留匹配regex的值。请注意，用`listFiltered`来使用whitelist o或 blacklist usecase会比这个更快。
 
 ```json
 { "type" : "regexFiltered", "delegate" : <dimensionSpec>, "pattern": <java regex pattern> }
 ```
 
-For more details and examples, see [multi-value dimensions](multi-value-dimensions.html).
-
+更多细节和示例，如 [multi-value dimensions](multi-value-dimensions.html)
 ### Upper and Lower extraction functions.
 
-Returns the dimension values as all upper case or lower case.
-Optionally user can specify the language to use in order to perform upper or lower transformation 
+用大写或着小写返回dimension value。
 
+可选的用户可以指定要使用的语言来执行大写或小写的转换
 ```json
 {
   "type" : "upper",
@@ -386,8 +357,7 @@ Optionally user can specify the language to use in order to perform upper or low
 }
 ```
 
-or without setting "locale" (in this case, the current value of the default locale for this instance of the Java Virtual Machine.)
-
+或没有设置"locale"(在这种情况下,这个实例的默认语言环境的当前值是Java虚拟机)。
 ```json
 {
   "type" : "lower"
@@ -400,9 +370,9 @@ or without setting "locale" (in this case, the current value of the default loca
 Lookups are an <a href="../development/experimental.html">experimental</a> feature.
 </div>
 
-Lookup DimensionSpecs can be used to define directly a lookup implementation as dimension spec.
-Generally speaking there is two different kind of lookups implementations. 
-The first kind is passed at the query time like `map` implementation.
+Lookup DimensionSpecs可以直接用于定义一个查找实现dimension spec。
+一般来说有两种不同类型的lookups implementations。
+第一种是通过在查询的时用`map`实现。
 
 ```json
 { 
@@ -415,18 +385,13 @@ The first kind is passed at the query time like `map` implementation.
 }
 ```
 
-A property of `retainMissingValue` and `replaceMissingValueWith` can be specified at query time to hint how to handle missing values. Setting `replaceMissingValueWith` to `""` has the same effect as setting it to `null` or omitting the property. 
-Setting `retainMissingValue` to true will use the dimension's original value if it is not found in the lookup. 
-The default values are `replaceMissingValueWith = null` and `retainMissingValue = false` which causes missing values to be treated as missing.
- 
-It is illegal to set `retainMissingValue = true` and also specify a `replaceMissingValueWith`.
-
-A property of `injective` specifies if optimizations can be used which assume there is no combining of multiple names into one. For example: If ABC123 is the only key that maps to SomeCompany, that can be optimized since it is a unique lookup. But if both ABC123 and DEF456 BOTH map to SomeCompany, then that is NOT a unique lookup. Setting this value to true and setting `retainMissingValue` to FALSE (the default) may cause undesired behavior.
-
-A property `optimize` can be supplied to allow optimization of lookup based extraction filter (by default `optimize = true`).
-
-The second kind where it is not possible to pass at query time due to their size, will be based on an external lookup table or resource that is already registered via configuration file or/and coordinator.
-
+`retainMissingValue` 和 `replaceMissingValueWith`的属性可以在查询时提示如何处理缺失值。把`replaceMissingValueWith` 设置为 `""`和设置`null` 或省略属性具有同样的效果。
+`retainMissingValue`设置为true，如果在查找中找不到，将会使用dimension's original value
+默认值是`replaceMissingValueWith = null` 和 `retainMissingValue = false`这样会导致缺失值从而被视为失踪。
+设置`retainMissingValue = true`和指定一个 `replaceMissingValueWith`是不合法的。
+`injective` 属性指定如果没有将多个names组合成一个就可以使用优化假设.
+`optimize`的属性允许基于extraction filter进行查询的优化(默认值为`optimize = true`)。
+第二种是不可能通过在查询时由于其尺寸，将基于已经注册通过configuration file 或 coordinator的一个external lookup table或resource。
 ```json
 { 
   "type":"lookup"

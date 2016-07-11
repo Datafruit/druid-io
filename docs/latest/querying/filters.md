@@ -2,24 +2,21 @@
 layout: doc_page
 ---
 #Query Filters
-A filter is a JSON object indicating which rows of data should be included in the computation for a query. It’s essentially the equivalent of the WHERE clause in SQL. Druid supports the following types of filters.
-
+filter是一个JSON对象指示哪些行数据为查询时应该计算。它本质上是相当于在SQL WHERE子句。Druid支持以下类型的filters。
 ### Selector filter
 
-The simplest filter is a selector filter. The selector filter will match a specific dimension with a specific value. Selector filters can be used as the base filters for more complex Boolean expressions of filters.
+最简单的filter是一个selector filter。selector filter将匹配一个特定的dimension与一个特定的值。对于更复杂的filters 的Boolean expressions，Selector filters可以用作 base filters。
 
-The grammar for a SELECTOR filter is as follows:
-
+SELECTOR filter 的语法如下：
 ``` json
 "filter": { "type": "selector", "dimension": <dimension_string>, "value": <dimension_value_string> }
 ```
 
-This is the equivalent of `WHERE <dimension_string> = '<dimension_value_string>'`.
 
+这相当于`WHERE <dimension_string> = '<dimension_value_string>'`
 ### Regular expression filter
 
-The regular expression filter is similar to the selector filter, but using regular expressions. It matches the specified dimension with the given pattern. The pattern can be any standard [Java regular expression](http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html).
-
+regular expression filter类似于selector filter，但它是使用egular expressions。它与给定的模式匹配指定的dimension。这个模式可以用于任何标准[Java regular expression](http://docs.oracle.com/javase/6/docs/api/java/util/regex/Pattern.html)。
 ``` json
 "filter": { "type": "regex", "dimension": <dimension_string>, "pattern": <pattern_string> }
 ```
@@ -28,40 +25,34 @@ The regular expression filter is similar to the selector filter, but using regul
 
 #### AND
 
-The grammar for an AND filter is as follows:
-
+AND filter的语法如下：
 ``` json
 "filter": { "type": "and", "fields": [<filter>, <filter>, ...] }
 ```
 
-The filters in fields can be any other filter defined on this page.
-
+fields中的filters 可以被这个页面的任何其他的filter定义。
 #### OR
 
-The grammar for an OR filter is as follows:
-
+OR filter的语法如下：
 ``` json
 "filter": { "type": "or", "fields": [<filter>, <filter>, ...] }
 ```
 
-The filters in fields can be any other filter defined on this page.
 
+fields中的filters可以被这个页面的任何其他的filter定义。
 #### NOT
 
-The grammar for a NOT filter is as follows:
-
+NOT filter 的语法如下：
 ```json
 "filter": { "type": "not", "field": <filter> }
 ```
 
-The filter specified at field can be any other filter defined on this page.
 
+指定的filter字段可以被这个页面的任何其他的filter定义。
 ### JavaScript filter
 
-The JavaScript filter matches a dimension against the specified JavaScript function predicate. The filter matches values for which the function returns true.
-
-The function takes a single argument, the dimension value, and returns either true or false.
-
+JavaScript filter对指定的JavaScript function匹配dimension。filter匹配值的函数返回true。
+function接受一个参数，dimension value，并返回 true或false。
 ```json
 {
   "type" : "javascript",
@@ -70,9 +61,8 @@ The function takes a single argument, the dimension value, and returns either tr
 }
 ```
 
-**Example**
-The following matches any dimension values for the dimension `name` between `'bar'` and `'foo'`
-
+**例子**
+以下对dimension `name` 在`'bar'`和`'foo'`之间匹配任何dimension values
 ```json
 {
   "type" : "javascript",
@@ -83,13 +73,10 @@ The following matches any dimension values for the dimension `name` between `'ba
 
 ### Extraction filter
 
-Extraction filter matches a dimension using some specific [Extraction function](./dimensionspecs.html#extraction-functions).
-The following filter matches the values for which the extraction function has transformation entry `input_key=output_value` where
- `output_value` is equal to the filter `value` and `input_key` is present as dimension.
-
-**Example**
-The following matches dimension values in `[product_1, product_3, product_5]` for the column `product`
-
+Extraction filter用一些指定[Extraction function](./dimensionspecs.html#extraction-functions)匹配一个dimension。
+下面的filter匹配值为extraction function 转换为`input_key=output_value` 当`output_value`相当于filter的`value` 和`input_key`dimension。
+**例子**
+以下为column `product`匹配的dimension values`[product_1, product_3, product_5]`
 ```json
 {
     "filter": {
@@ -112,8 +99,7 @@ The following matches dimension values in `[product_1, product_3, product_5]` fo
 ```
 ### Search filter
 
-Search filters can be used to filter on partial string matches. 
-
+Search filters可以filter在部分将字符串匹配
 ```json
 {
     "filter": {
@@ -127,7 +113,7 @@ Search filters can be used to filter on partial string matches.
 }
 ```
 
-|property|description|required?|
+|属性|描述|要求|
 |--------|-----------|---------|
 |type|This String should always be "search".|yes|
 |dimension|The dimension to perform the search over.|yes|
@@ -135,14 +121,12 @@ Search filters can be used to filter on partial string matches.
 
 ### In filter
 
-In filter can be used to express the following SQL query:
-
+In filter可以用来表达以下SQL查询:
 ```sql
  SELECT COUNT(*) AS 'Count' FROM `table` WHERE `outlaw` IN ('Good', 'Bad', 'Ugly')
 ```
 
-The grammar for a IN filter is as follows:
-
+IN filter的语法如下：
 ```json
 {
     "type": "in",
@@ -153,13 +137,11 @@ The grammar for a IN filter is as follows:
 
 ### Bound filter
 
-Bound filter can be used to filter by comparing dimension values to an upper value or/and a lower value. 
-By default Comparison is string based and **case sensitive**.
-To use numeric comparison you can set `alphaNumeric` to `true`.
-By default the bound filter is a not a strict inclusion `inputString <= upper && inputSting >= lower`.
-
-The grammar for a bound filter is as follows:
-
+Bound filter可以通过比较dimension values转成大写值或小写值来filter
+使用默认的Comparison是基于字符串的而且**区分大小写的**。
+你可以设置 `alphaNumeric`为`true`去使用numeric comparison
+使用默认的bound filter不是一个strict inclusion`inputString <= upper && inputSting >= lower`
+bound filter语法如下：
 ```json
 {
     "type": "bound",
@@ -169,8 +151,8 @@ The grammar for a bound filter is as follows:
     "alphaNumeric": true
 }
 ```
-Equivalent to retain column if `21 <= age <= 31`
 
+如果`21 <= age <= 31`保留列
 ```json
 {
     "type": "bound",
@@ -180,12 +162,9 @@ Equivalent to retain column if `21 <= age <= 31`
 }
 ```
 
-Equivalent to retain column if `foo <= name <= hoo`
-
-In order to have a strict inclusion user can set `lowerStrict` or/and `upperStrict` to `true`
-
-To have strict bounds:
-
+如果`foo <= name <= hoo`保留列
+为了有strict inclusion用户可以设置`lowerStrict` 或`upperStrict`为`true`
+有strict bounds：
 ```json
 {
     "type": "bound",
@@ -197,10 +176,9 @@ To have strict bounds:
     "alphaNumeric": true
 }
 ```
-Equivalent to retain column if `21 < age < 31`
 
-To have strict upper bound:
-
+如果`21 <= age <= 31`保留列
+有strict upper bound：
 ```json
 {
     "type": "bound",
@@ -212,10 +190,8 @@ To have strict upper bound:
 }
 ```
 
-Equivalent to retain column if `21 <= age < 31`
-
-To compare to only an upper bound or lowe bound
-
+如果`21 <= age <= 31`保留列
+只有一个上限或者下限时
 ```json
 {
     "type": "bound",
@@ -226,8 +202,7 @@ To compare to only an upper bound or lowe bound
 }
 ```
 
-Equivalent to retain column if `age < 31`
-
+如果`age < 31`保留列
 ```json
 {
     "type": "bound",
@@ -237,27 +212,26 @@ Equivalent to retain column if `age < 31`
 }
 ```
 
-Equivalent to retain column if ` 18 <= age`
-
-For `alphaNumeric` comparator, in case of the dimension value includes none-digits you may expect **fuzzy matching**
-If dimension value starts with a none digit, the filter will consider it out of range (`value < lowerBound` and `value > upperBound`)
-If dimension value starts with digit and contains a none digits comparing will be done character wise.  
-For instance suppose lower bound is `100` and value is `10K` the filter will match (`100 < 10K` returns `true`) since `K` is greater than any digit
-Now suppose that the lower bound is `110` the filter will not match (`110 < 10K` returns `false`)
+如` 18 <= age`保留列
+`alphaNumeric`的comparator，如果dimension value包括none-digits你可能期望得到 **fuzzy matching**。
+如果dimension value以一个none digit开始，filter将考虑(`value < lowerBound` 和 `value > upperBound`)以外的范围。
+如果dimension value以digit开始而且包含none digits 比较哪个更好。
+如下限为`100`值是`10K`，filter将匹配(`100 < 10K` 返回 `true`)，因为`K`比任何的digit更好。
+现在假设下限为`110`，filter将不会匹配(`110 < 10K` 返回 `false`)
 
 
 #### Search Query Spec
 
 ##### Insensitive Contains
 
-|property|description|required?|
+|属性|描述|要求|
 |--------|-----------|---------|
 |type|This String should always be "insensitive_contains".|yes|
 |value|A String value to run the search over.|yes|
 
 ##### Fragment
 
-|property|description|required?|
+|属性|描述|要求|
 |--------|-----------|---------|
 |type|This String should always be "fragment".|yes|
 |values|A JSON array of String values to run the search over.|yes|
@@ -265,7 +239,7 @@ Now suppose that the lower bound is `110` the filter will not match (`110 < 10K`
 
 ##### Contains
 
-|property|description|required?|
+|属性|描述|要求|
 |--------|-----------|---------|
 |type|This String should always be "contains".|yes|
 |value|A String value to run the search over.|yes|

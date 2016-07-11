@@ -1,23 +1,21 @@
 ---
 layout: doc_page
 ---
-# Query Caching
+# 查询缓存
 
-Druid supports query result caching through an LRU cache. Results are stored on a per segment basis, along with the 
-parameters of a given query. This allows Druid to return final results based partially on segment results in the cache and partially 
-on segment results from scanning historical/real-time segments.
 
-Segment results can be stored in a local heap cache or in an external distributed key/value store. Segment query caches 
-can be enabled at either the Historical and Broker level (it is not recommended to enable caching on both).
+Druid支持通过一个LRU缓存将查询结果缓存。随着给定查询的参数，结果会存储在每个段的基础上。
+Druid返回最终结果部分基于分段缓存和部分基于扫描的 historical/real-time segments结果。
 
-## Query caching on Brokers
+Segment结果可以存储在一个本地堆缓存或分布式键/值存储在外部。段查询缓存可以在 Historicals和Broker级别上启用(不建议启用高速缓存)。
+## 查询缓存代理
 
-Enabling caching on the broker can yield faster results than if query caches were enabled on Historicals for small clusters. This is 
-the recommended setup for smaller production clusters (< 20 servers). Take note that when caching is enabled on the Broker, 
-results from Historicals are returned on a per segment basis, and Historicals will not be able to do any local result merging.
 
-## Query caching on Historicals
+如果查询缓存启用 Historicals为小型集群那启用缓存代理可以产生更快的结果。这是因为建议设置较小的生产集群服务器(< 20 servers)。
+注意,当缓存启用代理, Historicals的结果返回在每段的基础上，而且Historicals将无法做任何本地结果合并。
 
-Larger production clusters should enable caching only on the Historicals to avoid having to use Brokers to merge all query 
-results. Enabling caching on the Historicals instead of the Brokers enables the Historicals to do their own local result
-merging and puts less strain on the Brokers.
+## Historicals 的查询缓存
+
+
+较大的生产集群应该只有在Historicals为了避免使用Brokers合并所有查询结果时才启用高速缓存。
+为使自己的本地结果合并和减少Brokers上的压力，应该启用 Historicals的缓存而不是启用Brokers
