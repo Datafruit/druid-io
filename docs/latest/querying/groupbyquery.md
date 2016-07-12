@@ -1,13 +1,12 @@
 ---
 layout: doc_page
 ---
-# groupBy Queries
-These types of queries take a groupBy query object and return an array of JSON objects where each object represents a
-grouping asked for by the query. Note: If you only want to do straight aggregates for some time range, we highly recommend
-using [TimeseriesQueries](../querying/timeseriesquery.html) instead. The performance will be substantially better. If you want to
-do an ordered groupBy over a single dimension, please look at [TopN](../querying/topnquery.html) queries. The performance for that use case is also substantially better.
-An example groupBy query object is shown below:
+# groupBy 查询
 
+这些类型的查询需要groupBy查询对象，并返回一个JSON对象数组，其中每个对象代表了一个分组查询的要求。
+注意：如果你只想在一段时间范围内做直接聚合，我们强烈建议用 [TimeseriesQueries](../querying/timeseriesquery.html)代替。这样性能会更好些。如果你想
+按着单维度顺序groupBy，请看[TopN](../querying/topnquery.html)查询。该用例的性能也会更好些。
+groupBy查询对象示例如下：
 ``` json
 {
   "queryType": "groupBy",
@@ -50,9 +49,9 @@ An example groupBy query object is shown below:
 }
 ```
 
-There are 11 main parts to a groupBy query:
+这里有11个groupBy查询的主要部分
 
-|property|description|required?|
+|属性|描述|要求|
 |--------|-----------|---------|
 |queryType|This String should always be "groupBy"; this is the first thing Druid looks at to figure out how to interpret the query|yes|
 |dataSource|A String or Object defining the data source to query, very similar to a table in a relational database. See [DataSource](../querying/datasource.html) for more information.|yes|
@@ -66,8 +65,13 @@ There are 11 main parts to a groupBy query:
 |intervals|A JSON Object representing ISO-8601 Intervals. This defines the time ranges to run the query over.|yes|
 |context|An additional JSON Object which can be used to specify certain flags.|no|
 
-To pull it all together, the above query would return *n\*m* data points, up to a maximum of 5000 points, where n is the cardinality of the `country` dimension, m is the cardinality of the `device` dimension, each day between 2012-01-01 and 2012-01-03, from the `sample_datasource` table. Each data point contains the (long) sum of `total_usage` if the value of the data point is greater than 100, the (double) sum of `data_transfer` and the (double) result of `total_usage` divided by `data_transfer` for the filter set for a particular grouping of `country` and `device`. The output looks like this:
 
+把所有的都放在一起，上面的查询会返回 *n\*m* 数据点，上限为5000点，从`sample_datasource`表，其中n是`country`维度的基数，
+m是 `device` 维度的基数，每一天都在2012-01-01和2012-01-03之间。
+每个数据点都包含`total_usage`的和(long)，如果数据点的值大于100，`data_transfer` 的和(double)和 `total_usage`的结果(double)以`data_transfer`的过滤器设置为特定分组的`country` 和 `device`。
+输出是这样的:
+                                                                                                                                                                                                                                                                                                                  把所有的都放在一起，上面的查询会返回 *n\*m* 数据点，上限为5000点,其中n是`country`维度的基数，m是 `device` 维度的基数,每一天在2012-01-01和2012-01-01之间，从`sample_datasource`表。每个数据点都包含的(long)和`total_usage`如果数据点的值大于100,(double)和`data_transfer`和`total_usage`(double)的结果除以`data_transfer`的过滤器设置为特定分组的`country` 和 `device`。输出是这样的:的过滤器设置为特定分组的`country` 和`device`。输出是这样的:
+                                                                                                                                                                                                                    
 ```json
 [ 
   {
@@ -96,13 +100,10 @@ To pull it all together, the above query would return *n\*m* data points, up to 
 ]
 ```
 
-### Behavior on multi-value dimensions
+### 行为多值维度
 
-groupBy queries can group on multi-value dimensions. When grouping on a multi-value dimension, _all_ values
-from matching rows will be used to generate one group per value. It's possible for a query to return more groups than
-there are rows. For example, a groupBy on the dimension `tags` with filter `"t1" OR "t3"` would match only row1, and
-generate a result with three groups: `t1`, `t2`, and `t3`. If you only need to include values that match
-your filter, you can use a [filtered dimensionSpec](dimensionspecs.html#filtered-dimensionspecs). This can also
-improve performance.
 
-See [Multi-value dimensions](multi-value-dimensions.html) for more details.
+groupBy查询可以在多值组维度分组。当分组在一个多值的维度，_all_值从匹配行将用于生成一组值。有可能一个查询比多行返回更多组。例如，groupBy与过滤维度`tags` 的`"t1" 或 "t3"`只匹配第一行，
+和生成一个结果与三组:`t1`，`t2`，还有`t3`。如果你只需要包含值相匹配你的过滤器，您可以使用一个[filtered dimensionSpec](dimensionspecs.html#filtered-dimensionspecs)。这也可以提高性能。
+
+查看[Multi-value dimensions](multi-value-dimensions.html)更多细节。

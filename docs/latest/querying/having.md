@@ -1,20 +1,16 @@
 ---
 layout: doc_page
 ---
-# Filter groupBy Query Results
-A having clause is a JSON object identifying which rows from a groupBy query should be returned, by specifying conditions on aggregated values.
+# Filter groupBy 查询结果
+having clause是一个JSON对象识别哪些行从groupBy查询应该返回，通过指定条件对聚合值。
+它实际上是相当于SQL子句。
 
-It is essentially the equivalent of the HAVING clause in SQL.
+Druid 支持下面几种having clauses类型。
+### 数字过滤器
 
-Druid supports the following types of having clauses.
-
-### Numeric filters
-
-The simplest having clause is a numeric filter.
-Numeric filters can be used as the base filters for more complex boolean expressions of filters.
-
-Here's an example of a having-clause numeric filter:
-
+最简单的having clause是数字滤波器。
+数字过滤器对于更复杂的boolean expressions过滤器可以用作基础。
+这是一个having-clause 数字过滤的例子：
 ```json
 {
     "type": "greaterThan",
@@ -25,9 +21,8 @@ Here's an example of a having-clause numeric filter:
 
 #### Equal To
 
-The equalTo filter will match rows with a specific aggregate value.
-The grammar for an `equalTo` filter is as follows:
-
+equalTo filter将匹配一个指定的聚合值。
+`equalTo` filter语法如下：
 ```json
 {
     "type": "equalTo",
@@ -36,13 +31,11 @@ The grammar for an `equalTo` filter is as follows:
 }
 ```
 
-This is the equivalent of `HAVING <aggregate> = <value>`.
-
+这相当于`HAVING <aggregate> = <value>`。
 #### Greater Than
 
-The greaterThan filter will match rows with aggregate values greater than the given value.
-The grammar for a `greaterThan` filter is as follows:
-
+greaterThan filter将匹配聚合值大于给定的值。
+`greaterThan` filter语法如下：
 ```json
 {
     "type": "greaterThan",
@@ -51,13 +44,11 @@ The grammar for a `greaterThan` filter is as follows:
 }
 ```
 
-This is the equivalent of `HAVING <aggregate> > <value>`.
-
+这等同于`HAVING <aggregate> > <value>`。
 #### Less Than
 
-The lessThan filter will match rows with aggregate values less than the specified value.
-The grammar for a `greaterThan` filter is as follows:
-
+lessThan filter将匹配聚合值大于给定的值。
+`lessThan` filter语法如下：
 ```json
 {
     "type": "lessThan",
@@ -66,17 +57,16 @@ The grammar for a `greaterThan` filter is as follows:
 }
 ```
 
-This is the equivalent of `HAVING <aggregate> < <value>`.
+这等同于`HAVING <aggregate> > <value>`。
 
 
 
-### Dimension Selector Filter
+### 维度选择器过滤器
 
 #### dimSelector
 
-The dimSelector filter will match rows with dimension values equal to the specified value.
-The grammar for a `dimSelector` filter is as follows:
-
+dimSelector filter将匹配聚合值等于给定值。
+ `dimSelector` filter语法如下：
 ```json
 {
     "type": "dimSelector",
@@ -90,8 +80,7 @@ The grammar for a `dimSelector` filter is as follows:
 
 #### AND
 
-The grammar for an AND filter is as follows:
-
+AND filter语法如下：
 ```json
 {
     "type": "and",
@@ -99,12 +88,10 @@ The grammar for an AND filter is as follows:
 }
 ```
 
-The having clauses in `havingSpecs` can be any other having clause defined on this page.
-
+`havingSpecs` 的having clauses可以是这个页面定义的任何having clauses。
 #### OR
 
-The grammar for an OR filter is as follows:
-
+OR filter的语法如下：
 ```json
 {
     "type": "or",
@@ -112,12 +99,11 @@ The grammar for an OR filter is as follows:
 }
 ```
 
-The having clauses in `havingSpecs` can be any other having clause defined on this page.
+`havingSpecs` 的having clauses可以是这个页面定义的任何having clauses。
 
 #### NOT
 
-The grammar for a NOT filter is as follows:
-
+NOT filter语法如下：
 ```json
 {
     "type": "not",
@@ -125,4 +111,4 @@ The grammar for a NOT filter is as follows:
 }
 ```
 
-The having clause specified at `havingSpec` can be any other having clause defined on this page.
+`havingSpecs` 的having clauses可以是这个页面定义的任何having clauses。

@@ -1,13 +1,12 @@
 ---
 layout: doc_page
 ---
-# Sort groupBy Query Results
-The limitSpec field provides the functionality to sort and limit the set of results from a groupBy query. If you group by a single dimension and are ordering by a single metric, we highly recommend using [TopN Queries](../querying/topnquery.html) instead. The performance will be substantially better. Available options are:
+# Sort groupBy 查询结果
+limitSpec字段提供了功能分类和限制groupBy查询的结果集。如果你以一个单维度分组和以单一指标排序，我们强烈建议使用[TopN Queries](../querying/topnquery.html)。性能会更好。可用的选项是:
 
 ### DefaultLimitSpec
 
-The default limit spec takes a limit and the list of columns to do an orderBy operation over. The grammar is:
-
+默认限制规范需要限制和列的列表做orderBy操作结束。语法是:
 ```json 
 {
     "type"    : "default",
@@ -18,8 +17,7 @@ The default limit spec takes a limit and the list of columns to do an orderBy op
 
 #### OrderByColumnSpec
 
-OrderByColumnSpecs indicate how to do order by operations. Each order-by condition can be a `jsonString` or a map of the following form:
-
+OrderByColumnSpecs根据操作排序指示怎么做。每个order by条件可以是`jsonString`或下面形式的示意:
 ```json 
 {
     "dimension" : "<Any dimension or metric name>",
@@ -27,4 +25,4 @@ OrderByColumnSpecs indicate how to do order by operations. Each order-by conditi
 }
 ```
 
-If only the dimension is provided (as a JSON string), the default order-by is ascending.
+如果只提供维度(如一个JSON字符串），默认order-by是递增。

@@ -1,78 +1,62 @@
 ---
 layout: doc_page
 ---
-# Multitenancy Considerations
+# 多租户的考虑
+Druid常用于面向用户的数据应用，其中多租户是一个重要的要求。该文档概述了Druid的多租户存储和查询功能。
+## 共享数据源或者每个租户一个数据源？
 
-Druid is often used to power user-facing data applications, where multitenancy is an important requirement. This
-document outlines Druid's multitenant storage and querying features.
+一个数据源相当于Druid的一个数据库表。多租户工作量可以用分离数据源给每个租户，或者租户间用一个租户id分享一个或更多数据源。
+当决定用哪个方法时，需考虑每个方法的优缺点
 
-## Shared datasources or datasource-per-tenant?
+每个租户数据源的优点：
+- 每个数据源有他自己的模式，自己的backfill，自己的分区规则，还有自己的数据加载和终止规则。
+- 查询可以更快是由于它们有很少部分段为典型租户的查询检查
+- 你将得到最大限度的灵活性。
 
-A datasource is the Druid equivalent of a database table. Multitenant workloads can either use a separate datasource
-for each tenant, or can share one or more datasources between tenants using a "tenant_id" dimension. When deciding
-which path to go down, consider that each path has pros and cons.
+分享数据源的优点：
 
-Pros of datasources per tenant:
+- 每个数据源都需要有自己的实时索引JVNs。
+- 每个数据源都需要有自己Hadoop批量操作的YARN资源。
+- 每个数据源都需要有自己在磁盘上的段文件。
+- 由于这些原因可以浪费大量的小的数据源。
 
-- Each datasource can have its own schema, its own backfills, its own partitioning rules, and its own data loading
-and expiration rules.
-- Queries can be faster since there will be fewer segments to examine for a typical tenant's query.
-- You get the most flexibility.
 
-Pros of shared datasources:
+一种妥协是使用多个数据源，但数量要比租户量少。例如，您可能会有些租户是分区规则A和一些分区规则B；您可以使用两个数据源来分离租户。
 
-- Each datasource requires its own JVMs for realtime indexing.
-- Each datasource requires its own YARN resources for Hadoop batch jobs.
-- Each datasource requires its own segment files on disk.
-- For these reasons it can be wasteful to have a very large number of small datasources.
+## 分区共享数据源
 
-One compromise is to use more than one datasource, but a smaller number than tenants. For example, you could have some
-tenants with partitioning rules A and some with partitioning rules B; you could use two datasources and split your
-tenants between them.
+如果你多租户共享集群使用数据源，大多数你的查询可能会在“tenant_id”维度上过滤。这些查询当数据被租户良好分区时表现最佳。
+有几个方法可以完成这项工作。
 
-## Partitioning shared datasources
+批量索引，您可以用[single-dimension partitioning](../indexing/batch-ingestion.html#single-dimension-partitioning)
+通过租户id去划分你的数据。Druid都是第一次通过时间划分，但二级分区用时间bucket将会决定租户id。
 
-If your multitenant cluster uses shared datasources, most of your queries will likely filter on a "tenant_id"
-dimension. These sorts of queries perform best when data is well-partitioned by tenant. There are a few ways to
-accomplish this.
+实时索引，你可以很多选择。
+1. 分区tenant_id前期。你可以通过调整你发送给Druid的流去分区。
+如果你使用Kafka你可以有Kafka生产商分区主题tenant_id的散列。如果你正在用Tranguility，你就可以定义自定义[分区器](http://static.druid.io/tranquility/api/latest/#com.metamx.tranquility.partition.Partitioner)
 
-With batch indexing, you can use [single-dimension partitioning](../indexing/batch-ingestion.html#single-dimension-partitioning)
-to partition your data by tenant_id. Druid always partitions by time first, but the secondary partition within each
-time bucket will be on tenant_id.
+2. 定期对你旧数据重建索引。您可以用["数据源"输入规范](../ingestion/batch-ingestion.html#datasource)来做这个。
+您可以使用此与一维分区重新分配数据相一致。
+## 自定义数据分布
 
-With realtime indexing, you have a couple of options.
+Druid另外通过提供可配置的方式分发数据支持多租户。Druid的historical nodes可以配置[tiers](../operations/rule-configuration.html)，和 [rules](../operations/rule-configuration.html) 
+可以设置决定段进入哪个层。这方面的一个用例是最近的数据往往访问比旧数据更频繁。分层使最近的片段被托管在更强大的硬件来获得更好的性能。
+最近的片段的第二个副本可以复制在廉价的硬件上(不同的层)，老的片段也可以存储在这一层。
+## 支持高并发查询
 
-1. Partition on tenant_id upfront. You'd do this by tweaking the stream you send to Druid. If you're using Kafka then
-you can have your Kafka producer partition your topic by a hash of tenant_id. If you're using Tranquility then you can
-define a custom [Partitioner](http://static.druid.io/tranquility/api/latest/#com.metamx.tranquility.partition.Partitioner).
-2. Reindex your older data periodically. You can do this with the ["dataSource" input spec](../ingestion/batch-ingestion.html#datasource).
-You can use this in concert with single-dimension partitioning to repartition your data.
+Druid的基本计算单元是一个[segment](../design/segments.html)。
+节点扫描并行的段和给定节点可以并发扫描`druid.processing.numThreads`。
+来并行处理更多的数据和提高性能，更多的内核可以添加到一个集群。
+Druid段应该有大小，这样任何计算给定的段应该最多在500 ms内完成。
 
-## Customizing data distribution
+Druid内部存储扫描段在一个优先队列请求。如果一个给定的查询需要扫描比在一个集群中可用处理器的数量更多段，
+同时和许多同样昂贵的查询运行，我们不希望任何查询被忽视了。
+Druid的内部处理逻辑将扫描的一组段从一个查询和释放资源尽快扫描完成。
+这允许第二组段从另一个查询被扫描。通过保持段计算时间非常小，我们保证资源不断地产生，部分属于不同的查询都被处理。
 
-Druid additionally supports multitenancy by providing configurable means of distributing data. Druid's historical nodes 
-can be configured into [tiers](../operations/rule-configuration.html), and [rules](../operations/rule-configuration.html) 
-can be set that determines which segments go into which tiers. One use case of this is that recent data tends to be accessed 
-more frequently than older data. Tiering enables more recent segments to be hosted on more powerful hardware for better performance. 
-A second copy of recent segments can be replicated on cheaper hardware (a different tier), and older segments can also be 
-stored on this tier.
 
-## Supporting high query concurrency
+Druid查询可以选择设置`priority`标志在[查询内容](../querying/query-context.html)。
+查询我们都知道是缓慢的(下载或报告样式的查询)可以de-prioritized、更互动查询可以有更高的优先级。
 
-Druid's fundamental unit of computation is a [segment](../design/segments.html). Nodes scan segments in parallel and a
-given node can scan `druid.processing.numThreads` concurrently. To
-process more data in parallel and increase performance, more cores can be added to a cluster. Druid segments
-should be sized such that any computation over any given segment should complete in at most 500ms.
-
-Druid internally stores requests to scan segments in a priority queue. If a given query requires scanning
-more segments than the total number of available processors in a cluster, and many similarly expensive queries are concurrently
-running, we don't want any query to be starved out. Druid's internal processing logic will scan a set of segments from one query and release resources as soon as the scans complete.
-This allows for a second set of segments from another query to be scanned. By keeping segment computation time very small, we ensure
-that resources are constantly being yielded, and segments pertaining to different queries are all being processed.
-
-Druid queries can optionally set a `priority` flag in the [query context](../querying/query-context.html). Queries known to be
-slow (download or reporting style queries) can be de-prioritized and more interactive queries can have higher priority. 
-
-Broker nodes can also be dedicated to a given tier. For example, one set of broker nodes can be dedicated to fast interactive queries, 
-and a second set of broker nodes can be dedicated to slower reporting queries. Druid also provides a [router](../development/router.html) 
-node that can route queries to different brokers based on various query parameters (datasource, interval, etc.).  
+代理节点也可以专注于一个给定的层。例如，一组代理节点可以致力于快速交互式查询，和第二组代理节点可以致力于更慢的报告查询。
+Druid还提供了一个[路由器](../development/router.html)节点可以基于多样查询参数(数据源、间隔等)进行路线查询不同的代理器。
