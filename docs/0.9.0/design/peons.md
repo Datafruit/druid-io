@@ -5,19 +5,18 @@ layout: doc_page
 Peons
 -----
 
-For Peon Configuration, see [Peon Configuration](../configuration/indexing-service.html).
+查看peon的配置 [Peon Configuration](../configuration/indexing-service.html).
 
-Peons run a single task in a single JVM. MiddleManager is responsible for creating Peons for running tasks.
-Peons should rarely (if ever for testing purposes) be run on their own.
+Peon在一个单独的jvm中运行任务，MiddleManager负责创建peons用于运行任务。Peons应该很少是单独启动运行（除非是为了测试）。
 
-Running
+启动方式：
 -------
 
-The peon should very rarely ever be run independent of the middle manager unless for development purposes.
+Peon应该很少独立于middle manager之外运行，除非视为了开发的目的。
 
 ```
 io.druid.cli.Main internal peon <task_file> <status_file>
 ```
 
-The task file contains the task JSON object.
-The status file indicates where the task status will be output.
+task_file 包含任务信息的JSON对象。
+status_file 指定任务状态输出到哪里。

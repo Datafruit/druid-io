@@ -2,15 +2,15 @@
 layout: doc_page
 ---
 
-Middle Manager Node
+MiddleManager节点
 ------------------
 
-For Middlemanager Node Configuration, see [Indexing Service Configuration](../configuration/indexing-service.html).
+Middle Manager的配置请查看 [Indexing Service Configuration](../configuration/indexing-service.html).
 
-The middle manager node is a worker node that executes submitted tasks. Middle Managers forward tasks to peons that run in separate JVMs.
-The reason we have separate JVMs for tasks is for resource and log isolation. Each [Peon](../design/peons.html) is capable of running only one task at a time, however, a middle manager may have multiple peons.
+middle manager节点是执行提交任务的工作节点。middle manager将任务分发到peons运行，一个peon在一个单独的jvm中运行。
+原因是我们通过单独的jvm对任务做资源隔离和日志隔离。一个peon在一个时间只能运行一个任务，然而，一个middle manager可以管理多个peon。
 
-Running
+运行middle manager
 -------
 
 ```
@@ -24,4 +24,4 @@ HTTP Endpoints
 
 * `/status`
 
-Returns the Druid version, loaded extensions, memory used, total memory and other useful information about the node.
+返回Druid的版本信息、加载的外部依赖、内存的使用、总共的内存和其他有关节点的信息。

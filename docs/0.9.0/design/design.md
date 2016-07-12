@@ -2,99 +2,99 @@
 layout: doc_page
 ---
 
-For a comprehensive look at the architecture of Druid, read the [White Paper](http://static.druid.io/docs/druid.pdf). Please note 
-that Druid is undergoing rapid development and the white paper may be out date.
+为了全面了解Druid的框架，阅读[白皮书](http://static.druid.io/docs/druid.pdf)。请注意，Druid在快速发展，白皮书的内容可能过期。
 
-What is Druid?
+什么是Druid
 ==============
 
-Druid is a system built to allow fast ("real-time") access to large sets of seldom-changing data. It was designed with the intent of being a service and maintaining 100% uptime in the face of code deployments, machine failures and other eventualities of a production system. It can be useful for back-office use cases as well, but design decisions were made explicitly targeting an always-up service.
+Druid的创建允许获取大量很少变化的数据集，Druid设计的主要目的是作为一种服务面对代码部署、机器故障或者其他不可预测的事件发生的生产系统，能够保证100%的正常运行。
 
-Druid currently allows for single-table queries in a similar manner to [Dremel](http://research.google.com/pubs/pub36632.html) and [PowerDrill](http://www.vldb.org/pvldb/vol5/p1436_alexanderhall_vldb2012.pdf). It adds to the mix
+Druid现在可以做类似Dremel和PowerDrill的单表查询。同时增加了一些新特性：
 
-1.  columnar storage format for partially nested data structures
-2.  hierarchical query distribution with intermediate pruning
-3.  indexing for quick filtering
-4.  realtime ingestion (ingested data is immediately available for querying)
-5.  fault-tolerant distributed architecture that doesn’t lose data
+1.  为局部嵌套数据结构提供列式存储格式
+2.  分布式查询树模型
+3.  为快速过滤做索引
+4.  实时摄入数据和查询（摄入的数据是立即可用于查询）
+5.  高容错的分布式体系架构
 
-As far as a comparison of systems is concerned, Druid sits in between PowerDrill and Dremel on the spectrum of functionality. It implements almost everything Dremel offers (Dremel handles arbitrary nested data structures while Druid only allows for a single level of array-based nesting) and gets into some of the interesting data layout and compression methods from PowerDrill.
+至于和其他系统的比较，Druid功能介于Dremel和PowerDrill之间，Druid实现了几乎Dremel的所有功能（Dremel可以处理任意嵌套数据结构，而Druid只能处理单一的数组类型），从PowerDrill借鉴了一下比较实用的数据布局和压缩方法。
 
-Druid is a good fit for products that require real-time data ingestion of a single, large data stream. Especially if you are targeting no-downtime operation and are building your product on top of a time-oriented summarization of the incoming data stream. When talking about query speed it is important to clarify what "fast" means: with Druid it is entirely within the realm of possibility (we have done it) to achieve queries that run in less than a second across trillions of rows of data.
+Druid是一个大数据流、单一的数据摄取产品的不错的选择。特别是如果你的目标是想构建一个无停机和流入的数据以时间为导向的产品，Druid很适合。当谈查询速度的话题时，要明确一个很重要说明，"fast"的意义是什么：Druid完全有可能实现不到一秒钟完成对数以万亿行数据的查询（官方已经测试成功）。
 
-### Architecture
+### 总体架构
 
-Druid is architected as a grouping of systems each with a distinct role and together they form a working system. The name comes from the Druid class in many role-playing games: it is a shape-shifter, capable of taking many different forms to fulfill various different roles in a group.
+Druid的架构为不同作用的系统，这些系统结合起来就行成了一个可以工作的大系统。它的名字来源于很多类似于Druid的角色扮演游戏：它可以变换，能够通过不同的形式来实现不同角色。
 
-Each of the systems, or components, described below also has a dedicated page with more details. You can find the page in the menu on the right, or click the link in the component's description.
+每一个系统，或者说是组件，在下面有描述，更详细的信息在其专有的页面查看。你可以在右边的目录找到相应的页面，也可以通过点击下面相应组建的描述的链接跳转。
 
-The node types that currently exist are:
+当前存在的节点类型：
 
-* [**Historical**](../design/historical.html) nodes are the workhorses that handle storage and querying on "historical" data (non-realtime). Historical nodes download segments from deep storage, respond to the queries from broker nodes about these segments, and return results to the broker nodes. They announce themselves and the segments they are serving in Zookeeper, and also use Zookeeper to monitor for signals to load or drop new segments.
-* [**Coordinator**](../design/coordinator.html) nodes monitor the grouping of historical nodes to ensure that data is available, replicated and in a generally "optimal" configuration. They do this by reading segment metadata information from metadata storage to determine what segments should be loaded in the cluster, using Zookeeper to determine what Historical nodes exist, and creating Zookeeper entries to tell Historical nodes to load and drop new segments.
-* [**Broker**](../design/broker.html) nodes receive queries from external clients and forward those queries to Realtime and Historical nodes. When Broker nodes receive results, they merge these results and return them to the caller. For knowing topology, Broker nodes use Zookeeper to determine what Realtime and Historical nodes exist.
-* [**Indexing Service**](../design/indexing-service.html) nodes form a cluster of workers to load batch and real-time data into the system as well as allow for alterations to the data stored in the system.
-* [**Realtime**](../design/realtime.html) nodes also load real-time data into the system. They are simpler to set up than the indexing service, at the cost of several [limitations](../ingestion/stream-pull.html#limitations) for production use.
+* [**Historical**](../design/historical.html)  历史节点负责处理历史数据存储和查询历史数据（非实时），历史节点从“deep storage”下载segments，将结果数据返回给broker节点，historical加载完segment通知Zookeeper，Historical nodes使用Zookeeper监控需要加载或者删除哪些新的segments。
+* [**Coordinator**](../design/coordinator.html) 协调节点对历史节点的分组进行监控，以确保数据可用，和最佳的配置。协调节点通过从元数据存储中读取元数据信息来判断哪些segments是应该加载到集群的，使用Zookeeper去判断哪些历史节点是存活的，在Zookeeper中创建任务条目告诉历史节点去加载和删除segments。
+* [**Broker**](../design/broker.html) 代理节点接收来自外部client的查询请求，并转发这些请求给实时节点和历史节点，当代理节点接收到结果时，将来自实时节点和历史节点的结果合并返回给调用方。为了知道整个拓扑结构，代理节点通过使用Zookeeper在确定哪些实时节点和历史节点存活。
+* [**Indexing Service**](../design/indexing-service.html) 索引服务节点由多个worker组成的集群，负责为加载批量的和实时的数据创建索引，并且允许对已经存在的数据进行修改。
+* [**Realtime**](../design/realtime.html) 实时节点负责加载实时的数据到系统中，在生产使用的几个限制成本上实时节点比索引服务节点更容易搭建。
 
-This separation allows each node to only care about what it is best at. By separating Historical and Realtime processing, we separate the memory concerns of listening on a real-time stream of data and processing it for entry into the system. By separating the Coordinator and Broker, we separate the needs for querying from the needs for maintaining "good" data distribution across the cluster.
+这种分离方式使每个节点只关心怎么才是使它运行的最好。通过把历史和实时处理分离开，我们把对内存的关注分离开，监听实时的流数据并处理它写入系统。我们分离协调节点和代理节点，我们把查询的需求分离开是为了在整个集群中维持良好的数据分布。
 
-The following diagram shows how queries and data flow through this architecture, and which nodes (and external dependencies, discussed below) are involved:
+下图展示了通过这种架构如何查询数据和数据在这样的架构中是怎么传递的，以及在操作过程涉及到哪些节点。
 
 <img src="../../img/druid-dataflow-3.png" width="800"/>
 
-All nodes can be run in some highly available fashion, either as symmetric peers in a share-nothing cluster or as hot-swap failover nodes.
+所有的节点都是以高可用的方式运行，无论是作为无共享集群或者热插拔故障转移节点都是同等的看待。
 
-Aside from these nodes, there are 3 external dependencies to the system:
+除了这些节点还有三个外部依赖系统：
 
-1.  A running [ZooKeeper](../dependencies/zookeeper.html) cluster for cluster service discovery and maintenance of current data topology
-2.  A [metadata storage instance](../dependencies/metadata-storage.html) for maintenance of metadata about the data segments that should be served by the system
-3.  A ["deep storage" LOB store/file system](../dependencies/deep-storage.html) to hold the stored segments
+1.  一个运行的 [ZooKeeper](../dependencies/zookeeper.html) 集群主要作用是帮助群集服务发现和维护当前数据的拓扑结构
+2.  一个[metadata storage instance](../dependencies/metadata-storage.html) 元数据实例，用户维护系统中segments的元数据
+3.  一个["deep storage" LOB store/file system](../dependencies/deep-storage.html) 深度存储系统，负责存储segments（如hdfs、S3）
 
-The following diagram illustrates the cluster's management layer, showing how certain nodes and dependencies help manage the cluster by tracking and exchanging metadata:
+下图展示了集群的管理层级，显示特定节点和依赖的外部系统是如何通过跟踪和交换元数据的方式管理集群的。
 
 <img src="../../img/druid-manage-1.png" width="800"/>
 
 
-### Segments and Data Storage
+### Segments and 数据存储
 
-Getting data into the Druid system requires an indexing process, as shown in the diagrams above. This gives the system a chance to analyze the data, add indexing structures, compress and adjust the layout in an attempt to optimize query speed. A quick list of what happens to the data follows.
+如上图所示，加载数据到Druid需要先进行索引。在创建索引的过程中Druid可以对数据进行分析、添加索引结构、压缩和调整布局尝试优化查询速度。对列数据进行一系列快速的操作列表如下：
 
--   Converted to columnar format
--   Indexed with bitmap indexes
--   Compressed using various algorithms
-    -   LZ4 for all columns
-    -   Dictionary encoding w/ id storage minimization for String columns
-    -   Bitmap compression for bitmap indexes
+-   转换为列模式
+-   创建位图索引
+-   使用各种压缩算法
+    -   所有的列使用LZ4压缩
+    -   所有的字符串列采用字典编码/标识以达到最小化存储
+    -   对位图索引使用位图压缩
 
-The output of the indexing process is called a "segment". Segments are the fundamental structure to store data in Druid. Segments contain the various dimensions and metrics in a data set, stored in a column orientation, as well as the indexes for those columns.
+索引过程的输出成为一个"segment"（此处不想翻译成段，破坏了语意），Segments是Druid数据存储的基本存储结构。Segments包含一个数据集内的各种维度和度量值，以列的排列方式存储，以及这些列的索引。
 
-Segments are stored in a "deep storage" LOB store/file system (see [Deep Storage](../dependencies/deep-storage.html) for information about potential options). Data is then loaded by Historical nodes by first downloading the data to their local disk and then memory-mapping it before serving queries.
+Segments存储在LOB文件存储结构的"deep storage"中。在进行查询时，通过历史节点首先下载数据到历史节点的本地磁盘然后将磁盘数据映射到内存。
 
-If a Historical node dies, it will no longer serve its segments, but given that the segments are still available on the "deep storage", any other node can simply download the segment and start serving it. This means that it is possible to actually remove all historical nodes from the cluster and then re-provision them without any data loss. It also means that if the "deep storage" is not available, the nodes can continue to serve the segments they have already pulled down (i.e. the cluster goes stale, not down).
+如果历史节点挂掉，它将不能对外提供查询它本地加载的Segments的服务，但是这些Segments还是存储在Deep Storage中，其他的历史节点还可以很轻松的把需要的Segments下载下来对外提供服务。这就意味着，即使从集群中移除所有的历史节点，也能够保证存储在Deep Storage中的Segments不会丢失。同时也意味着即使Deep Storage不可用，历史节点仍然可以对外服务，因为节点已经从Deep Storage中将相应的Segments拉取到了本地磁盘。
 
-In order for a segment to exist inside of the cluster, an entry has to be added to a table in a metadata storage instance. This entry is a self-describing bit of metadata about the segment, including things like the schema of the segment, its size, and its location on deep storage. These entries are what the Coordinator uses to know what data **should** be available on the cluster.
+在集群中保存一个segment，需要将一条segment的元数据添加到元数据实例中，这条元数据是segment的自我描述，包含segment的schema、segment的大小、segment在Deep Storage中的存贮位置。这些元数据信息使Coordinator（协调器）知道集群能够对外提供哪些数据服务。
 
-### Fault Tolerance
+### 容错
 
--   **Historical** As discussed above, if a historical node dies, another historical node can take its place and there is no fear of data loss.
--   **Coordinator** Can be run in a hot fail-over configuration. If no coordinators are running, then changes to the data topology will stop happening (no new data and no data balancing decisions), but the system will continue to run.
--   **Broker** Can be run in parallel or in hot fail-over.
--   **Indexing Service** Workers run with replicated ingestion tasks, coordination piece has hot fail-over.
--   **Realtime** Depending on the semantics of the delivery stream, multiple of these can be run in parallel processing the exact same stream. They periodically checkpoint to disk and eventually push out to deep storage. Steps are taken to be able to recover from process death, but loss of access to the local disk can result in data loss if this is the only method of adding data to the system.
--   **"deep storage" file system** If this is not available, new data will not be able to enter the cluster, but the cluster will continue operating as is.
--   **metadata storage** If this is not available, the Coordinator will be unable to find out about new segments in the system, but it will continue with its current view of the segments that should exist in the cluster.
--   **ZooKeeper** If this is not available, data topology changes cannot be made, but the Brokers will maintain their most recent view of the data topology and continue serving requests accordingly.
+-   **Historical** 正如上面所说的历史节点，即使一个历史节点挂掉，其他的历史节点也可以替代它，不必担心数据丢失。
+-   **Coordinator** （协调器）可以配置成快速失败转移的方式运行，如果没有正常运行的协调器，对数据拓扑的改变请求将会停止（不会有新的数据进来，也不会对现有的数据做负载均衡），但是系统仍然能够继续运行。
+-   **Broker**（代理节点）可以并行运行或者配置成快速失败转移的方式。
+-   **Indexing Service** （索引服务）运行过程中对于摄入的任务进行备份，其中的coordination具有快速失败转移的功能。
+-   **Realtime** （实时数据节点）依赖于传递数据流的语义，多个可以并行处理的相同的流，它们定期在磁盘中设置检查点，最终把这些检查点数据推送到Deep Storage。这样做是为了从失败中可以恢复数据。如果仅将数据保存在本地磁盘，可能会出现本地磁盘损坏不可用，就会造成磁盘数据丢失。
+-   **"deep storage" 文件系统不可用，新的数据将不能够添加到集群中，但是集群仍然可以对外提供服务。
+-   **metadata storage** 如果元数据存储不可用，Coordinator（协调器）将不能够从系统中发现新的segment，但Coordinator仍然可以通过现在已经存在的segment视图模式操作segment。
+-   **ZooKeeper** 如果不可用，不能够对数据拓扑进行更改，但是代理节点仍然可以通过最近的数据拓扑视图对外提供查询服务。
 
-### Query processing
+### 查询处理
 
-A query first enters the Broker, where the Broker will match the query with the data segments that are known to exist. It will then pick a set of machines that are serving those segments and rewrite the query for each server to specify the segment(s) targetted. The Historical/Realtime processes will take in the query, process them and return results. The Broker then takes the results and merges them together to get the final answer, which it returns. In this way, the broker can prune all of the data that doesn’t match a query before ever even looking at a single row of data.
+查询请求首先进入Broker（代理节点），代理节点将与已知存在的segment进行匹配查询。代理节点将选择一组机器，这组机器可以提供需要的segment的服务，将查询写入到这组机器的每台指定目标segment的服务器。在一次查询中，历史节点的查询和实时节点的查询的处理过程都会进行，然后返回结果。代理节点将历史节点和实时节点返回的结果合并，返回给查询请求方。甚至在看到一条数据之前，代理节点可以对不匹配的查询进行优化。
 
-For filters at a more granular level than what the Broker can prune based on, the indexing structures inside each segment allows the historical nodes to figure out which (if any) rows match the filter set before looking at any row of data. It can do all of the boolean algebra of the filter on the bitmap indices and never actually look directly at a row of data.
+在代理节点优化数据的基础之上，可以采用更细粒度的索引。在看到结果数据之前，索引结构中的每一segment都允许历史节点来计算哪些行是符合过滤器要求的。过滤器可以对位图索引做所有的布尔判断计算，从来不会直接就看到数据。
 
-Once it knows the rows that match the current query, it can access the columns it cares about for those rows directly without having to load data that it is just going to throw away.
+一旦代理节点知道与当前查询相匹配的行，它就可以访问它所关心的列而不必再加载数据。将没用的查询数据扔掉。
 
-### In-memory?
+### 内存使用
 
-Druid is not always and only in-memory. When we first built it, it is true that it was all in-memory all the time, but as time went on the price-performance tradeoff ended up swinging towards keeping all of our customers data in memory all the time a non-starter. We then added the ability to memory-map data and allow the OS to handle paging data in and out of memory on demand. Our production cluster is primarily configured to operate with this memory mapping behavior and we are definitely over-subscribed in terms of memory available vs. data a node is serving.
+Druid不只是用内存，当我们第一次构建Druid时，Druid确实只是用内存，但是随着时间的推移，对成本和性能的权衡，会停止一直使用内存来操作数据，我们添加了对数据处理是用memory-map的能力，允许操作系统对内存中的数据进行分页处理。我们的生产集群首先要配置每一个提供服务节点的可用内存大小。
 
 As you read some of the old blog posts or other literature about the project, you will see "in-memory" touted often, as that is the history of where Druid came from, but the technical reality is that there is a spectrum of price vs. performance. Being able to slide along that spectrum	 from all in-memory (high cost, great performance) to mostly on disk (low cost, low performance) is the important knob to be able to adjust.
+当你读了一些旧的博客文章或其他有关项目的文献，你会经常看到对“in-memory”使用的鼓励，Druid历史节点的设计也来源于此，只不过技术的具体实现是性价比的综合考量。遵循这种考量作为重要的指标来调整内存（成本高，性能出色）和硬盘（成本低，性能低）存储的比例。
