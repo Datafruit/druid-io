@@ -2,7 +2,7 @@
 layout: doc_page
 ---
 
-为了全面了解Druid的框架，阅读[白皮书](http://static.druid.io/docs/druid.pdf)。请注意，Druid在快速发展，白皮书的内容可能过期。
+想要全面了解Druid的框架，请阅读[白皮书](http://static.druid.io/docs/druid.pdf)。请注意，Druid在快速发展，白皮书的内容可能过期。
 
 什么是Druid
 ==============
@@ -25,7 +25,7 @@ Druid是一个大数据流、单一的数据摄取产品的不错的选择。特
 
 Druid的架构为不同作用的系统，这些系统结合起来就行成了一个可以工作的大系统。它的名字来源于很多类似于Druid的角色扮演游戏：它可以变换，能够通过不同的形式来实现不同角色。
 
-每一个系统，或者说是组件，在下面有描述，更详细的信息在其专有的页面查看。你可以在右边的目录找到相应的页面，也可以通过点击下面相应组建的描述的链接跳转。
+每一个系统，或者说是组件，在下面有描述，更详细的信息在其专有的页面查看。你可以在右边的目录找到相应的页面，也可以通过点击下面相应组件的链接跳转。
 
 当前存在的节点类型：
 
@@ -94,7 +94,6 @@ Segments存储在LOB文件存储结构的"deep storage"中。在进行查询时�
 
 ### 内存使用
 
-Druid不只是用内存，当我们第一次构建Druid时，Druid确实只是用内存，但是随着时间的推移，对成本和性能的权衡，会停止一直使用内存来操作数据，我们添加了对数据处理是用memory-map的能力，允许操作系统对内存中的数据进行分页处理。我们的生产集群首先要配置每一个提供服务节点的可用内存大小。
+Druid并非仅仅是一个in-memory的系统。当我们最开始使用时，它的确一直使用in-memory的模式，但随着时间推移，基于成本和性能的权衡，我们不再一直使用in-memory存储。随后，我们增加了内存映射的功能，在需要的时候，让操作系统来处理数据加载到内存及清理。我们的生产环境优先配置为这种内存映射的方式，并且我们也很确定在内存可用性与数据服务节点来说这样是非常划算的。
 
-As you read some of the old blog posts or other literature about the project, you will see "in-memory" touted often, as that is the history of where Druid came from, but the technical reality is that there is a spectrum of price vs. performance. Being able to slide along that spectrum	 from all in-memory (high cost, great performance) to mostly on disk (low cost, low performance) is the important knob to be able to adjust.
-当你读了一些旧的博客文章或其他有关项目的文献，你会经常看到对“in-memory”使用的鼓励，Druid历史节点的设计也来源于此，只不过技术的具体实现是性价比的综合考量。遵循这种考量作为重要的指标来调整内存（成本高，性能出色）和硬盘（成本低，性能低）存储的比例。
+当你读了一些旧的博客文章或其他有关项目的文献，你会经常看到对“in-memory”使用的吹捧，Druid的过去也是如此，只不过技术的具体实现是性价比的综合考量。遵循这种考量作为重要的指标来调整内存（成本高，性能出色）到硬盘（成本低，性能低）存储。
