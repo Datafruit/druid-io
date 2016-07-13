@@ -1,9 +1,8 @@
 ---
 layout: doc_page
 ---
-# Search Queries
-A search query returns dimension values that match the search specification.
-
+# 搜索查询
+一个搜索查询返回匹配搜索规范的维度值
 ```json
 {
   "queryType": "search",
@@ -26,9 +25,9 @@ A search query returns dimension values that match the search specification.
 }
 ```
 
-There are several main parts to a search query:
+这是搜索查询的几种主要部分：
 
-|property|description|required?|
+|属性|描述|要求|
 |--------|-----------|---------|
 |queryType|This String should always be "search"; this is the first thing Druid looks at to figure out how to interpret the query.|yes|
 |dataSource|A String or Object defining the data source to query, very similar to a table in a relational database. See [DataSource](../querying/datasource.html) for more information.|yes|
@@ -41,8 +40,7 @@ There are several main parts to a search query:
 |sort|An object specifying how the results of the search should be sorted. Two possible types here are "lexicographic" (the default sort) and "strlen".|no|
 |context|See [Context](../querying/query-context.html)|no|
 
-The format of the result is:
-
+结果格式如下：
 ```json
 [
   {

@@ -1,16 +1,15 @@
 ---
 layout: doc_page
 ---
-# Segment Metadata Queries
-Segment metadata queries return per segment information about:
-
-* Cardinality of all columns in the segment
-* Estimated byte size for the segment columns if they were stored in a flat format
-* Number of rows stored inside the segment
-* Interval the segment covers
-* Column type of all the columns in the segment
-* Estimated total segment byte size in if it was stored in a flat format
-* Segment id
+# 段元数据查询
+段元数据查询返回每个段信息：
+* 该段所有列的基数
+* 如果他们存储在一个平面格式估计段列字节大小
+* 存储在段内部的行数
+* 区间段覆盖
+* 段所有列的列类型
+* 如果它存储在平面格式内估算总的段字节大小
+* 段id
 
 ```json
 {
@@ -20,9 +19,8 @@ Segment metadata queries return per segment information about:
 }
 ```
 
-There are several main parts to a segment metadata query:
-
-|property|description|required?|
+这下面是段元数据查询的几个主要部分：
+|属性|描述|要求|
 |--------|-----------|---------|
 |queryType|This String should always be "segmentMetadata"; this is the first thing Druid looks at to figure out how to interpret the query|yes|
 |dataSource|A String or Object defining the data source to query, very similar to a table in a relational database. See [DataSource](../querying/datasource.html) for more information.|yes|
@@ -33,8 +31,7 @@ There are several main parts to a segment metadata query:
 |analysisTypes|A list of Strings specifying what column properties (e.g. cardinality, size) should be calculated and returned in the result. Defaults to ["cardinality", "size", "interval"]. See section [analysisTypes](#analysistypes) for more details.|no|
 |lenientAggregatorMerge|If true, and if the "aggregators" analysisType is enabled, aggregators will be merged leniently. See below for details.|no|
 
-The format of the result is:
-
+结果格式如下：
 ```json
 [ {
   "id" : "some_id",
@@ -53,89 +50,65 @@ The format of the result is:
 } ]
 ```
 
-Dimension columns will have type `STRING`.
-Metric columns will have type `FLOAT` or `LONG` or name of the underlying complex type such as `hyperUnique` in case of COMPLEX metric.
-Timestamp column will have type `LONG`.
+维度列有`STRING`类型
+指标列将有`FLOAT` 或者 `LONG`或潜在的复杂类型的名称如`hyperUnique`的复杂指标。
+Timestamp列有`LONG`类型。
+如果 `errorMessage`段是非空，那你不应该相信响应的其他段，因为它们的内容是不明确的。
 
-If the `errorMessage` field is non-null, you should not trust the other fields in the response. Their contents are
-undefined.
+只有是维度（即`STRING`类型）的列才将有基数。其他列（timestamp和metric列）将基数表示为`null`。
+### 间隔
 
-Only columns which are dimensions (ie, have type `STRING`) will have any cardinality. Rest of the columns (timestamp and metric columns) will show cardinality as `null`.
-
-### intervals
-
-If an interval is not specified, the query will use a default interval that spans a configurable period before the end time of the most recent segment.
-
-The length of this default time period is set in the broker configuration via:
-  druid.query.segmentMetadata.defaultHistory
-
+如果间隔没有被指定，查询将用默认的间隔也就是跨越了一个可配置的时期结束之前最近的一段时间。
+这个默认的时期长度是通过代理配置设置：
+druid.query.segmentMetadata.defaultHistory
 ### toInclude
 
-There are 3 types of toInclude objects.
-
+有三种toInclude对象类型。
 #### All
 
-The grammar is as follows:
-
+语法如下：
 ``` json
 "toInclude": { "type": "all"}
 ```
 
 #### None
 
-The grammar is as follows:
-
+语法如下：
 ``` json
 "toInclude": { "type": "none"}
 ```
 
 #### List
 
-The grammar is as follows:
-
+语法如下：
 ``` json
 "toInclude": { "type": "list", "columns": [<string list of column names>]}
 ```
 
 ### analysisTypes
 
-This is a list of properties that determines the amount of information returned about the columns, i.e. analyses to be performed on the columns.
+这是一个决定返回的信息量的属性列表的列，即分析执行列。
+默认情况下，将使用所有的分析类型。如果有属性是非必要的，从这个列表中忽略它将产生一个更高效的查询。
+有四种列分析类型：
+#### 基数
 
-By default, all analysis types will be used. If a property is not needed, omitting it from this list will result in a more efficient query.
+* `cardinality`在结果中将返回估计每个列基数的向下取整。只有与维度列相关。
+#### size 大小
 
-There are four types of column analyses:
+* `size`在结果中将包含估计总段字节大小正如数据存储为文本格式
+#### 间隔
 
-#### cardinality
+* `intervals`在结果中将包含与查询段相关的间隔列表
+#### 聚合器
 
-* `cardinality` in the result will return the estimated floor of cardinality for each column. Only relevant for
-dimension columns.
-
-#### size
-
-* `size` in the result will contain the estimated total segment byte size as if the data were stored in text format
-
-#### interval
-
-* `intervals` in the result will contain the list of intervals associated with the queried segments.
-
-#### aggregators
-
-* `aggregators` in the result will contain the list of aggregators usable for querying metric columns. This may be
-null if the aggregators are unknown or unmergeable (if merging is enabled).
-
-* Merging can be strict or lenient. See *lenientAggregatorMerge* below for details.
-
-* The form of the result is a map of column name to aggregator.
-
+* `aggregators`在结果中将包含用于查询指标列的聚合器的列表。如果未知聚合器或者不能合并（如果启用了合并），这可能是空值。
+合并可以是严格的或者是宽松的。查看 *lenientAggregatorMerge*下面有更多细节。
+结果的形式是聚合列名的映射。
 ### lenientAggregatorMerge
 
-Conflicts between aggregator metadata across segments can occur if some segments have unknown aggregators, or if
-two segments use incompatible aggregators for the same column (e.g. longSum changed to doubleSum).
+如果有些部分未知的聚合器，或者两段使用不兼容的聚合器相同的列(例如longSum改为doubleSum)跨段聚合器元数据之间的冲突可能会发生。
 
-Aggregators can be merged strictly (the default) or leniently. With strict merging, if there are any segments
-with unknown aggregators, or any conflicts of any kind, the merged aggregators list will be `null`. With lenient
-merging, segments with unknown aggregators will be ignored, and conflicts between aggregators will only null out
-the aggregator for that particular column.
+聚合器可以严格(默认)或宽松地合并。严格的合并，如果有任何部分与未知的聚合器，或任何类型的任何冲突，合并后聚合器列表将是`null`。
+宽松合并，未知聚合器的段将被忽略，聚合器之间的冲突只有在该聚合器的特定列外才是null。
 
-In particular, with lenient merging, it is possible for an invidiual column's aggregator to be `null`. This will not
-occur with strict merging.
+特别是，宽松的合并，它可能让个人列的聚合器成为 `null`。这不会有严格的合并发生。

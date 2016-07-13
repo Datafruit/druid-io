@@ -2,11 +2,11 @@
 layout: doc_page
 ---
 
-Query Context
-=============
+查询内容
+====
 
 The query context is used for various query configuration parameters.
-
+查询内容用来为各种查询配置参数。
 |property         |default              | description          |
 |-----------------|---------------------|----------------------|
 |timeout          | `0` (no timeout)    | Query timeout in milliseconds, beyond which unfinished queries will be cancelled. |
