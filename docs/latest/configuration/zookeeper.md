@@ -1,7 +1,7 @@
 ---
 layout: doc_page
 ---
-Production Zookeeper Configuration
+产生Zookeeper配置
 ==================================
 
-You can find great information about configuring and running Zookeeper [here](https://cwiki.apache.org/confluence/display/KAFKA/Operations#Operations-Zookeeper).
+你可以找到更多关于配置和运行Zookeeper的信息[这里](https://cwiki.apache.org/confluence/display/KAFKA/Operations#Operations-Zookeeper)。

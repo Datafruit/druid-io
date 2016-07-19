@@ -69,10 +69,9 @@ TopN近似于在每个节点排出它们的K个top结果，然后仅返回这K�
   ]
 }
 ```
+11个topN查询部分。
 
-There are 11 parts to a topN query.
-
-|property|description|required?|
+|属性|描述|要求|
 |--------|-----------|---------|
 |queryType|This String should always be "topN"; this is the first thing Druid looks at to figure out how to interpret the query|yes|
 |dataSource|A String or Object defining the data source to query, very similar to a table in a relational database. See [DataSource](../querying/datasource.html) for more information.|yes|
@@ -86,8 +85,8 @@ There are 11 parts to a topN query.
 |metric|A String or JSON object specifying the metric to sort by for the top list. For more info, see [TopNMetricSpec](../querying/topnmetricspec.html).|yes|
 |context|See [Context](../querying/query-context.html)|no|
 
-Please note the context JSON object is also available for topN queries and should be used with the same caution as the timeseries case.
-The format of the results would look like so:
+请注意JSON对象文本对topN查询也是可行的而且应该用与timeseries事件相同的警告。
+结果的格式应该像这样：
 
 ```json
 [
@@ -129,33 +128,21 @@ The format of the results would look like so:
 ]
 ```
 
-### Behavior on multi-value dimensions
+### 多值维度的行为
 
-topN queries can group on multi-value dimensions. When grouping on a multi-value dimension, _all_ values
-from matching rows will be used to generate one group per value. It's possible for a query to return more groups than
-there are rows. For example, a topN on the dimension `tags` with filter `"t1" OR "t3"` would match only row1, and
-generate a result with three groups: `t1`, `t2`, and `t3`. If you only need to include values that match
-your filter, you can use a [filtered dimensionSpec](dimensionspecs.html#filtered-dimensionspecs). This can also
-improve performance.
+topN查询可以在多值维度上分组。当在多值维度上分组时，从匹配行得到的_all_值为每个值生成一个组。
+这让查询返回比行更多的组。比如，一个过滤 `"t1" 或者 "t3"` 的维度 `tags` 的topN只匹配row1，和生成3组结果：`t1`， `t2`，和`t3`。如果你只需要匹配你的筛选条件的值，你可以用一个[filtered dimensionSpec](dimensionspecs.html#filtered-dimensionspecs)。这个也可以提高性能。
 
-See [Multi-value dimensions](multi-value-dimensions.html) for more details.
-
+查看[多值维度](multi-value-dimensions.html) 更多细节。
 ### Aliasing
 
-The current TopN algorithm is an approximate algorithm. The top 1000 local results from each segment are returned for merging to determine the global topN. As such, the topN algorithm is approximate in both rank and results. Approximate results *ONLY APPLY WHEN THERE ARE MORE THAN 1000 DIM VALUES*. A topN over a dimension with fewer than 1000 unique dimension values can be considered accurate in rank and accurate in aggregates.
+当前TopN算法是一种近似算法。每个段的前1000名本地结果返回合并以确定全球topN。就这样而言，topN算法是等级和结果的近似。近似结果*只有超过1000个dim 值时才应用*。一个维度少于1000个唯一的维度值的topN可以考虑等级精确和聚合精确。
+临界值可以通过需要重启生效或在查询上下文中设置`minTopNThreshold`让每个查询生效的服务器参数`druid.query.topN.minTopNThreshold`从默认的1000修改。
 
-The threshold can be modified from it's default 1000 via the server parameter `druid.query.topN.minTopNThreshold` which need to restart servers to take effect or set `minTopNThreshold` in query context which take effect per query. 
+如果你想要high cardinality的前100个，维度按照一些low-cardinality排序均匀地分布，均匀地分布维度，你可能会得到聚合时缺失的数据。换句话说，最好的topN用例是当你有信心把整体结果统一在顶部时。例如，如果一个特殊的网址ID是一些每天每个小时排名前10的指标，那么它可能会在topN准确多天。但是如果一个网址对于给定的时间内很少排在前1000，但是整个查询粒度在前500（例如：一个高度统一的网站交通混合在网址和高度周期性数据的数据集），然后一个前500查询可能不会有特殊的网站的排名，也可能对特殊网站的聚合并不精准。
+在继续这部分之前，请考虑你是否需要精准的结果。得到精准的结果是一个资源集密型的过程。对于绝大多数“有用的”数据结果，一种近似topN算法已提供足够的精度。
 
-If you are wanting the top 100 of a high cardinality, uniformly distributed dimension ordered by some low-cardinality, uniformly distributed dimension, you are potentially going to get aggregates back that are missing data.
-
-To put it another way, the best use cases for topN are when you can have confidence that the overall results are uniformly in the top. For example, if a particular site ID is in the top 10 for some metric for every hour of every day, then it will probably be accurate in the topN over multiple days. But if a site barely in the top 1000 for any given hour, but over the whole query granularity is in the top 500 (example: a site which gets highly uniform traffic co-mingling in the dataset with sites with highly periodic data), then a top500 query may not have that particular site a the exact rank, and may not be accurate for that particular site's aggregates.
-
-Before continuing in this section, please consider if you really need exact results. Getting exact results is a very resource intensive process. For the vast majority of "useful" data results, an approximate topN algorithm supplies plenty of accuracy.
-
-Users wishing to get an *exact rank and exact aggregates* topN over a dimension with greater than 1000 unique values should issue a groupBy query and sort the results themselves. This is very computationally expensive for high-cardinality dimensions.
-
-Users who can tolerate *approximate rank* topN over a dimension with greater than 1000 unique values, but require *exact aggregates* can issue two queries. One to get the approximate topN dimension values, and another topN with dimension selection filters which only use the topN results of the first.
-
+用户希望得到一个随着维度超过1000唯一值，应该产生一个分组查询和自己对结果进行排序的*精确等级和精确聚合*的topN。这对于high-cardinality维度是需要大量计算的。用户可以接受*近似等级*topN维度超过1000个唯一值，但是要求*精确聚合*可以产生两个查询。一个得到近似topN维度值，另一个维度选择过滤器topN只使用第一个topN结果。
 #### 查询示例1:
 
 ```json

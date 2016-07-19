@@ -1,45 +1,26 @@
 ---
 layout: doc_page
 ---
-Production Cluster Configuration
+生产集群配置
 ================================
 
 <div class="note info">
-This configuration is an example of what a production cluster could look like. Many other hardware combinations are
-possible! Cheaper hardware is absolutely possible.
+该配置是一个生产集群的一个例子。其他的硬件是可以组合的!便宜的硬件也是绝对可以的。
 </div>
-
-This production Druid cluster assumes that metadata storage and Zookeeper are already set up. The deep storage that is
-used for examples is [S3](https://aws.amazon.com/s3/) and [memcached](http://memcached.org/) is used for a distributed cache.
-
+这个生产Druid集群假设元数据存储和Zookeeper已经建立。比如深存储是用[S3](https://aws.amazon.com/s3/)，[分布式缓存](http://memcached.org/)是用于分布缓存的。
 <div class="note info">
-The nodes in this example do not need to be on their own individual servers. Overlord and Coordinator nodes should be
-co-located on the same hardware.
+这个例子中的节点不需要在他们自己个人的服务器上。Overlord 和 Coordinator节点应该集中在相同的硬件上。
 </div>
+响应（Historical，Broker和MiddleManager节点）查询的节点将尽可能地用核心，所以根据用法，把这些放在专用的机器上是最好的。有效地利用核的上限还没有什么特别的好处，而且它取决于查询类型，查询负载和模式。为正常使用，Historical后台进程应该至少每核心有1GB大小，但可以堆挤在一个更小的堆里测试。
 
-The nodes that respond to queries (Historical, Broker, and MiddleManager nodes) will use as many cores as are available,
-depending on usage, so it is best to keep these on dedicated machines. The upper limit of effectively utilized cores is
-not well characterized yet and would depend on types of queries, query load, and the schema. Historical daemons should
-have a heap size of at least 1GB per core for normal usage, but could be squeezed into a smaller heap for testing.
-Since in-memory caching is essential for good performance, even more RAM is better.
-Broker nodes will use RAM for caching, so they do more than just route queries.
-SSDs are highly recommended for Historical nodes when all they have more segments loaded than available memory.
-
-The nodes that are responsible for coordination (Coordinator and Overlord nodes) require much less processing.
-
-The effective utilization of cores by Zookeeper, metadata storage, and Coordinator nodes is likely to be between 1 and 2
-for each process/daemon, so these could potentially share a machine with lots of cores. These daemons work with heap
-size between 500MB and 1GB.
-
-We'll use [EC2](https://aws.amazon.com/ec2/) r3.8xlarge nodes for query facing nodes and m1.xlarge nodes for coordination nodes.
-The following examples work relatively well in production, however, a more optimized tuning for the nodes we selected and
-more optimal hardware for a Druid cluster are both definitely possible.
-
+因为内存中的缓存是良好性能必不可少的条件，而且越多的RAM会越好。Broker节点将用RAM缓存，所以他们做的不仅仅是路由查询。当他们都有比可用的内存更多段加载时，我们强烈推荐historical节点使用SSDs.
+负责协调（Coordination和Overlord节点）的节点要求更少的处理。Zookeeper的核心利用效率，元数据存储，和Coordination节点像是每个过程/后台程序的1和2之间，所以他们可以多核心分享一个机器。这些后台程序工作的堆大小是在500MB和1GB之间。我们将用[EC2](https://aws.amazon.com/ec2/)r3.8xlarge节点给查询面对节点和m1.xlarge节点给coordination节点。
+下面的例子相对较好地在生产中工作，然而，对于更优化调整我们选择的节点和更优化Druid集群的硬件两者都是可以的。
 <div class="note caution">
-For high availability, there should be at least a redundant copy of every process running on separate hardware.
+对于高可用性，应该每个运行在单独的硬件上的过程至少有一个冗余副本。
 </div>
 
-### Common Configuration (common.runtime.properties)
+### 通用配置（common.runtime.properties）
 
 ```
 # Extensions
@@ -86,21 +67,20 @@ druid.selectors.indexing.serviceName=druid:overlord
 druid.selectors.coordinator.serviceName=druid:prod:coordinator
 ```
 
-### Overlord Node
+### Overlord 节点
 
-Run:
+运行：
 
 ```
 io.druid.cli.Main server overlord
 ```
 
-Hardware:
+硬件：
 
 ```
 m1.xlarge (Cores: 4, Memory: 15.0 GB)
 ```
-
-JVM Configuration:
+JVM配置
 
 ```
 -server
@@ -144,21 +124,21 @@ druid.indexer.runner.minWorkerVersion=#{WORKER_VERSION}
 druid.indexer.storage.type=metadata
 ```
 
-### MiddleManager Node
+### MiddleManager 节点
 
-Run:
+运行：
 
 ```
 io.druid.cli.Main server middleManager
 ```
 
-Hardware:
+硬件：
 
 ```
 r3.8xlarge (Cores: 32, Memory: 244 GB, SSD)
 ```
 
-JVM Configuration:
+JVM配置：
 
 ```
 -server
@@ -206,21 +186,20 @@ druid.worker.ip=#{IP_ADDR}
 druid.worker.version=#{WORKER_VERSION}
 ```
 
-### Coordinator Node
+### Coordinator 节点
 
-Run:
+运行：
 
 ```
 io.druid.cli.Main server coordinator
 ```
 
-Hardware:
+硬件：
 
 ```
 m1.xlarge (Cores: 4, Memory: 15.0 GB)
 ```
-
-JVM Configuration:
+JVM配置：
 
 ```
 -server
@@ -245,21 +224,21 @@ druid.port=8080
 druid.service=druid/coordinator
 ```
 
-### Historical Node
+### Historical 节点
 
-Run:
+运行：
 
 ```
 io.druid.cli.Main server historical
 ```
 
-Hardware:
+硬件：
 
 ```
 r3.8xlarge (Cores: 32, Memory: 244 GB, SSD)
 ```
 
-JVM Configuration:
+JVM配置：
 
 ```
 -server
@@ -298,22 +277,21 @@ druid.segmentCache.locations=[{"path": "/mnt/persistent/zk_druid", "maxSize": 30
 druid.monitoring.monitors=["io.druid.server.metrics.HistoricalMetricsMonitor", "com.metamx.metrics.JvmMonitor"]
 ```
 
-### Broker Node
+### Broker节点
 
-Run:
+运行：
 
 ```
 io.druid.cli.Main server broker
 ```
 
-Hardware:
+硬件：
 
 ```
 r3.8xlarge (Cores: 32, Memory: 244 GB, SSD - this hardware is a bit overkill for the broker but we choose it for simplicity)
 ```
 
-JVM Configuration:
-
+JVM配置：
 ```
 -server
 -Xmx25g
@@ -350,22 +328,21 @@ druid.processing.numThreads=31
 druid.server.http.numThreads=50
 ```
 
-### Real-time Node
+### Real-time 节点
 
-Run:
+运行：
 
 ```
 io.druid.cli.Main server realtime
 ```
 
-Hardware (this is a little overkill):
-
+硬件（这是一个小过度）：
 ```
 r3.8xlarge (Cores: 32, Memory: 244 GB, SSD - this hardware is way overkill for the real-time node but we choose it for simplicity)
 ```
 
-JVM Configuration:
 
+JVM配置：
 ```
 -server
 -Xmx13g

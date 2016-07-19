@@ -1,68 +1,65 @@
 ---
 layout: doc_page
 ---
-For general Indexing Service information, see [here](../design/indexing-service.html).
 
-## Runtime Configuration
+对于一般索引服务信息，查阅[这里](../design/indexing-service.html)。
+## Runtime Configuration 
 
-The indexing service uses several of the global configs in [Configuration](../configuration/index.html) and has the following set of configurations as well:
+索引服务使用的几个全球配置在[配置](../configuration/index.html)和具有以下配置：
+### 必须设置Overlord和Middle Manager
 
-### Must be set on Overlord and Middle Manager
+#### 节点配置
 
-#### Node Configs
-
-|Property|Description|Default|
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.host`|The host for the current node. This is used to advertise the current processes location as reachable from another node and should generally be specified such that `http://${druid.host}/` could actually talk to this process|InetAddress.getLocalHost().getCanonicalHostName()|
 |`druid.port`|This is the port to actually listen on; unless port mapping is used, this will be the same port as is on `druid.host`|8090|
 |`druid.service`|The name of the service. This is used as a dimension when emitting metrics and alerts to differentiate between the various services|druid/overlord|
 
-#### Task Logging
+#### 任务日志
 
-If you are running the indexing service in remote mode, the task logs must be stored in S3, Azure Blob Store or HDFS.
-
-|Property|Description|Default|
+如果你正在远程模式下运行索引服务，任务日志必须存储在S3，Azure Blob Store或者HDFS。
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.indexer.logs.type`|Choices:noop, s3, azure, hdfs, file. Where to store task logs|file|
 
-##### File Task Logs
+##### 文件任务日志
 
-Store task logs in the local filesystem.
+任务日志存储在本地文件系统。
 
-|Property|Description|Default|
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.indexer.logs.directory`|Local filesystem path.|log|
 
-##### S3 Task Logs
+##### S3任务日志
 
-Store task logs in S3.
+任务日志存储在S3。
 
-|Property|Description|Default|
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.indexer.logs.s3Bucket`|S3 bucket name.|none|
 |`druid.indexer.logs.s3Prefix`|S3 key prefix.|none|
 
-#### Azure Blob Store Task Logs
-Store task logs in Azure Blob Store.
+#### Azure Blob Store任务日志
+任务日志存储在Azure Blob Store。
 
-Note: this uses the same storage account as the deep storage module for azure.
-
-|Property|Description|Default|
+注意：这个使用和Azure深存储模块相同的存储账户。
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.indexer.logs.container`|The Azure Blob Store container to write logs to|none|
 |`druid.indexer.logs.prefix`|The path to prepend to logs|none|
 
-##### HDFS Task Logs
+##### HDFS任务日志
 
-Store task logs in HDFS.
+任务日志存储在HDFS。
 
-|Property|Description|Default|
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.indexer.logs.directory`|The directory to store logs.|none|
 
-### Overlord Configs
+### Overlord 配置
 
-|Property|Description|Default|
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.indexer.runner.type`|Choices "local" or "remote". Indicates whether tasks should be run locally or in a distributed environment.|local|
 |`druid.indexer.storage.type`|Choices are "local" or "metadata". Indicates whether incoming tasks should be stored locally (in heap) or in metadata storage. Storing incoming tasks in metadata storage allows for tasks to be resumed if the overlord should fail.|local|
@@ -72,9 +69,8 @@ Store task logs in HDFS.
 |`druid.indexer.queue.restartDelay`|Sleep this long when overlord queue management throws an exception before trying again.|PT30S|
 |`druid.indexer.queue.storageSyncRate`|Sync overlord state this often with an underlying task persistence mechanism.|PT1M|
 
-The following configs only apply if the overlord is running in remote mode:
-
-|Property|Description|Default|
+以下的配置仅应用于Overlord运行在远程模式时：
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.indexer.runner.taskAssignmentTimeout`|How long to wait after a task as been assigned to a middle manager before throwing an error.|PT5M|
 |`druid.indexer.runner.minWorkerVersion`|The minimum middle manager version to send tasks to. |"0"|
@@ -83,9 +79,8 @@ The following configs only apply if the overlord is running in remote mode:
 |`druid.indexer.runner.taskCleanupTimeout`|How long to wait before failing a task after a middle manager is disconnected from Zookeeper.|PT15M|
 |`druid.indexer.runner.taskShutdownLinkTimeout`|How long to wait on a shutdown request to a middle manager before timing out|PT1M|
 
-There are additional configs for autoscaling (if it is enabled):
-
-|Property|Description|Default|
+这是自动缩放（如果是启动的）额外配置：
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.indexer.autoscale.strategy`|Choices are "noop" or "ec2". Sets the strategy to run when autoscaling is required.|noop|
 |`druid.indexer.autoscale.doAutoscale`|If set to "true" autoscaling will be enabled.|false|
@@ -99,25 +94,22 @@ There are additional configs for autoscaling (if it is enabled):
 |`druid.indexer.autoscale.workerVersion`|If set, will only create nodes of set version during autoscaling. Overrides dynamic configuration. |null|
 |`druid.indexer.autoscale.workerPort`|The port that middle managers will run on.|8080|
 
-#### Dynamic Configuration
+#### Dynamic 配置
 
-The overlord can dynamically change worker behavior.
-
-The JSON object can be submitted to the overlord via a POST request at:
-
+Overlord可以动态地改变工作者的行为。
+JSON对象可以在：
 ```
 http://<OVERLORD_IP>:<port>/druid/indexer/v1/worker
 ```
+通过一个post请求提交到Overlord
 
-Optional Header Parameters for auditing the config change can also be specified.
-
-|Header Param Name| Description | Default |
+审计配置的可选头参数也可以被指定改变。
+|头参数名|描述|默认|
 |----------|-------------|---------|
 |`X-Druid-Author`| author making the config change|""|
 |`X-Druid-Comment`| comment describing the change being done|""|
 
-A sample worker config spec is shown below:
-
+样本工人配置规格如下： 
 ```json
 {
   "selectStrategy": {
@@ -154,72 +146,65 @@ A sample worker config spec is shown below:
 }
 ```
 
-Issuing a GET request at the same URL will return the current worker config spec that is currently in place. The worker config spec list above is just a sample for EC2 and it is possible to extend the code base for other deployment environments. A description of the worker config spec is shown below.
 
-|Property|Description|Default|
+相同的URL发出一个GET请求将返回当前位置的人员配置规格。
+上面人员配置规格列表仅是EC2的一个示例，它可以扩展其他部署环境的代码库。人员配置规格描述如下：
+
+|属性|描述|默认|
 |--------|-----------|-------|
 |`selectStrategy`|How to assign tasks to middle managers. Choices are `fillCapacity`, `fillCapacityWithAffinity`, `equalDistribution` and `javascript`.|fillCapacity|
 |`autoScaler`|Only used if autoscaling is enabled. See below.|null|
 
-To view the audit history of worker config issue a GET request to the URL -
-
+查看审计人员配置历史，发出GET请求到URL-
 ```
 http://<OVERLORD_IP>:<port>/druid/indexer/v1/worker/history?interval=<interval>
 ```
 
-default value of interval can be specified by setting `druid.audit.manager.auditHistoryMillis` (1 week if not configured) in overlord runtime.properties.
-
-To view last <n> entries of the audit history of worker config issue a GET request to the URL -
-
+默认的间隔值可以被指定，通过在Overlord Runtime.properties设置`druid.audit.manager.auditHistoryMillis`（如果没设置则是一周）。
+查看最近n条审计员工配置历史，发出GET请求到URL-
 ```
 http://<OVERLORD_IP>:<port>/druid/indexer/v1/worker/history?count=<n>
 ```
 
-#### Worker Select Strategy
+#### 员工选择策略
 
 ##### Fill Capacity
 
-Workers are assigned tasks until capacity.
-
-|Property|Description|Default|
+按照员工能力分配任务。
+|属性|描述|默认|
 |--------|-----------|-------|
 |`type`|`fillCapacity`.|fillCapacity|
 
 ##### Fill Capacity With Affinity
 
-An affinity config can be provided.
-
-|Property|Description|Default|
+一个affinity配置提供如下。
+|属性|描述|默认|
 |--------|-----------|-------|
 |`type`|`fillCapacityWithAffinity`.|fillCapacityWithAffinity|
 |`affinity`|JSON object mapping a datasource String name to a list of indexing service middle manager host:port String values. Druid doesn't perform DNS resolution, so the 'host' value must match what is configured on the middle manager and what the middle manager announces itself as (examine the Overlord logs to see what your middle manager announces itself as).|{}|
 
-Tasks will try to be assigned to preferred workers. Fill capacity strategy is used if no preference for a datasource specified.
+任务将先分配给首选的员工。如果没有首选指定的数据源则使用填补能力策略
+##### 平均分配
 
-##### Equal Distribution
-
-The workers with the least amount of tasks is assigned the task.
-
-|Property|Description|Default|
+员工大部分任务是被分配的。
+|属性|描述|默认|
 |--------|-----------|-------|
 |`type`|`equalDistribution`.|fillCapacity|
 
 ##### Javascript
 
-Allows defining arbitrary logic for selecting workers to run task using a JavaScript function.
-The function is passed remoteTaskRunnerConfig, map of workerId to available workers and task to be executed and returns the workerId on which the task should be run or null if the task cannot be run.
-It can be used for rapid development of missing features where the worker selection logic is to be changed or tuned often.
-If the selection logic is quite complex and cannot be easily tested in javascript environment,
-its better to write a druid extension module with extending current worker selection strategies written in java.
+允许为选择的员工定义任意逻辑去用一个JavaScript函数执行任务。
+函数传递remoteTaskRunnerConfig，workerId的映射使工人和任务可执行并返回workerId，如果不能运行任务则任务应该运行或null。
+他可用于缺失功能的快速发展，工人选择逻辑是经常被改变或者转换的。
+如果选择逻辑非常复杂，在javascript环境下不容易测试，最好用java写一个扩展当前员工选择策略的druid扩展模块。
 
 
-|Property|Description|Default|
+|属性|描述|默认|
 |--------|-----------|-------|
 |`type`|`javascript`.|javascript|
 |`function`|String representing javascript function||
 
-Example: a function that sends batch_index_task to workers 10.0.0.1 and 10.0.0.2 and all other tasks to other available workers.
-
+例子：发送batch_index_task到员工10.0.0.1 和 10.0.0.2和所有其他的任务发送到其他可用的员工的一个函数。
 ```
 {
 "type":"javascript",
@@ -230,13 +215,11 @@ Example: a function that sends batch_index_task to workers 10.0.0.1 and 10.0.0.2
 ```
 
 
-
-
 #### Autoscaler
 
-Amazon's EC2 is currently the only supported autoscaler.
+Amazon's EC2当前仅支持自动缩放。
 
-|Property|Description|Default|
+|属性|描述|默认|
 |--------|-----------|-------|
 |`minNumWorkers`|The minimum number of workers that can be in the cluster at any given time.|0|
 |`maxNumWorkers`|The maximum number of workers that can be in the cluster at any given time.|0|
@@ -244,11 +227,11 @@ Amazon's EC2 is currently the only supported autoscaler.
 |`nodeData`|A JSON object that describes how to launch new nodes.|none; required|
 |`userData`|A JSON object that describes how to configure new nodes. If you have set druid.indexer.autoscale.workerVersion, this must have a versionReplacementString. Otherwise, a versionReplacementString is not necessary.|none; optional|
 
-### MiddleManager Configs
+### MiddleManager 配置
 
-Middle managers pass their configurations down to their child peons. The middle manager requires the following configs:
+Middle Manager通过他们的配置下至到他们的子工人。Middle Manager要求以下配置：
 
-|Property|Description|Default|
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.indexer.runner.allowedPrefixes`|Whitelist of prefixes for configs that can be passed down to child peons.|"com.metamx", "druid", "io.druid", "user.timezone","file.encoding"|
 |`druid.indexer.runner.compressZnodes`|Indicates whether or not the middle managers should compress Znodes.|true|
@@ -263,15 +246,14 @@ Middle managers pass their configurations down to their child peons. The middle 
 |`druid.worker.capacity`|Maximum number of tasks the middle manager can accept.|Number of available processors - 1|
 
 
-#### Peon Configs
-Although peons inherit the configurations of their parent middle managers, explicit child peon configs in middle manager can be set by prefixing them with:
+#### Peon 配置
+虽然工人继承他们父母Middle Manager的配置，明确子工人配置在Middle Manage可以通过加上前缀设置:
 
 ```
 druid.indexer.fork.property
 ```
-Additional peon configs include:
-
-|Property|Description|Default|
+额外的工人配置包括：
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.peon.mode`|Choices are "local" and "remote". Setting this to local means you intend to run the peon as a standalone node (Not recommended).|remote|
 |`druid.indexer.task.baseDir`|Base temporary working directory.|`System.getProperty("java.io.tmpdir")`|
@@ -283,16 +265,15 @@ Additional peon configs include:
 |`druid.indexer.task.gracefulShutdownTimeout`|Wait this long on middleManager restart for restorable tasks to gracefully exit.|PT5M|
 |`druid.indexer.task.directoryLockTimeout`|Wait this long for zombie peons to exit before giving up on their replacements.|PT10M|
 
-If `druid.indexer.runner.separateIngestionEndpoint` is set to true then following configurations are available for the ingestion server at peon:
-
-|Property|Description|Default|
+如果`druid.indexer.runner.separateIngestionEndpoint`是设置为true那么下面的配置对工人摄取服务器是可行的：
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.indexer.server.chathandler.http.numThreads`|Number of threads for HTTP requests.|Math.max(10, (Number of available processors * 17) / 16 + 2) + 30|
 |`druid.indexer.server.chathandler.http.maxIdleTime`|The Jetty max idle time for a connection.|PT5m|
 
-If the peon is running in remote mode, there must be an overlord up and running. Peons in remote mode can set the following configurations:
+如果工人在远程模式下运行，必须要有一个Overlord启动和运行。工人在远程模式可以设置以下配置：
 
-|Property|Description|Default|
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.peon.taskActionClient.retry.minWait`|The minimum retry time to communicate with overlord.|PT1M|
 |`druid.peon.taskActionClient.retry.maxWait`|The maximum retry time to communicate with overlord.|PT10M|
