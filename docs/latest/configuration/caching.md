@@ -2,42 +2,36 @@
 layout: doc_page
 ---
 
-# Caching
+# 缓存
 
-Caching can optionally be enabled on the broker, historical, and realtime
-processing. See [broker](broker.html#caching), 
-[historical](historical.html#caching), and [realtime](realtime.html#caching)  
-configuration options for how to enable it for different processes.
+缓存可以选择在 broker，historical，和 realtime过程中启动。查阅[broker](broker.html#caching)，
+[historical](historical.html#caching)，和[realtime](realtime.html#caching)
+如何启动不同过程的配置选项。
 
-Druid uses a local in-memory cache by default, unless a diffrent type of cache is specified.
-Use the `druid.cache.type` configuration to set a different kind of cache.
+Druid默认使用本地内存缓存，除非指定不同类型的缓存。
+使用`druid.cache.type`配置设置不同类型的缓存。
+## 缓存配置
 
-## Cache configuration
-
-Cache settings are set globally, so the same configuration can be re-used
-for both broker and historical nodes, when defined in the common properties file.
-
-|Property|Possible Values|Description|Default|
+缓存设置是全球性的，所以当Broker和historical节点定义在常见的属性文件中时，相同的配置可以被重复使用。
+|属性|可能的值|描述|默认|
 |--------|---------------|-----------|-------|
 |`druid.cache.type`|`local`, `memcached`, `hybrid`|The type of cache to use for queries. See below of the configuration options for each cache type|`local`|
 
 
-#### Local Cache
+#### 本地缓存
 
-A simple in-memory LRU cache. Local cache resides in JVM heap memory, so if you enable it, make sure you increase heap size accordingly.
-
-|Property|Description|Default|
+一个简单的内存LRU缓存。本地缓存是存在JVM堆内存中，所以如果你启用它，确保你相应地增加堆大小。
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.cache.sizeInBytes`|Maximum cache size in bytes. Zero disables caching.|0|
 |`druid.cache.initialSize`|Initial size of the hashtable backing the cache.|500000|
 |`druid.cache.logEvictionCount`|If non-zero, log cache eviction every `logEvictionCount` items.|0|
 
 
-#### Memcached
+#### Memcached分布式缓存
 
-Uses memcached as cache backend. This allows all nodes to share the same cache.
-
-|Property|Description|Default|
+使用分布式缓存作为缓存后端。这允许所有节点共享相同的缓存。
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.cache.expiration`|Memcached [expiration time](https://code.google.com/p/memcached/wiki/NewCommands#Standard_Protocol).|2592000 (30 days)|
 |`druid.cache.timeout`|Maximum time in milliseconds to wait for a response from Memcached.|500|
@@ -48,15 +42,13 @@ Uses memcached as cache backend. This allows all nodes to share the same cache.
 
 
 #### Hybrid
+使用任意两个缓存的组合作为二级L1 / L2缓存。　　
+这可能是用来结合本地内存缓存和远程memcached缓存。
 
-Uses a combination of any two caches as a two-level L1 / L2 cache.
-This may be used to combine a local in-memory cache with a remote memcached cache.
+缓存请求将在检查L2前检查L1缓存。
+如果L1缺失而且点击了L2，它也会填充L1。
 
-Cache requests will first check L1 cache before checking L2.
-If there is an L1 miss and L2 hit, it will also populate L1.
-
-
-|Property|Description|Default|
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.cache.l1.type`|type of cache to use for L1 cache. See `druid.cache.type` configuration for valid types.|`local`|
 |`druid.cache.l2.type`|type of cache to use for L2 cache. See `druid.cache.type` configuration for valid types.|`local`|

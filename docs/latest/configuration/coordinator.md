@@ -1,26 +1,24 @@
 ---
 layout: doc_page
 ---
-Coordinator Node Configuration
+Coordinator 节点配置
 ==============================
-For general Coordinator Node information, see [here](../design/coordinator.html).
-
-Runtime Configuration
+一般的Coordination节点信息，查阅[这里](../design/coordinator.html)。
+Runtime 配置
 ---------------------
 
-The coordinator node uses several of the global configs in [Configuration](../configuration/index.html) and has the following set of configurations as well:
+Coordination节点使用的几个全球配置在[配置](../configuration/index.html)和有以下配置设置：
+### 节点配置
 
-### Node Config
-
-|Property|Description|Default|
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.host`|The host for the current node. This is used to advertise the current processes location as reachable from another node and should generally be specified such that `http://${druid.host}/` could actually talk to this process|InetAddress.getLocalHost().getCanonicalHostName()|
 |`druid.port`|This is the port to actually listen on; unless port mapping is used, this will be the same port as is on `druid.host`|8081|
 |`druid.service`|The name of the service. This is used as a dimension when emitting metrics and alerts to differentiate between the various services|druid/coordinator|
 
-### Coordinator Operation
+### Coordinator 操作
 
-|Property|Description|Default|
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.coordinator.period`|The run period for the coordinator. The coordinator’s operates by maintaining the current state of the world in memory and periodically looking at the set of segments available and segments being served to make decisions about whether any changes need to be made to the data topology. This property sets the delay between each of these runs.|PT60S|
 |`druid.coordinator.period.indexingPeriod`|How often to send indexing tasks to the indexing service. Only applies if merge or conversion is turned on.|PT1800S (30 mins)|
@@ -33,9 +31,9 @@ The coordinator node uses several of the global configs in [Configuration](../co
 |`druid.coordinator.kill.durationToRetain`| Do not kill segments in last `durationToRetain`, must be greater or equal to 0. Only applies and MUST be specified if kill is turned on. Note that default value is invalid.|PT-1S (-1 seconds)|
 |`druid.coordinator.kill.maxSegments`|Kill at most n segments per kill task submission, must be greater than 0. Only applies and MUST be specified if kill is turned on. Note that default value is invalid.|0|
 
-### Metadata Retrieval
+### 元数据检索
 
-|Property|Description|Default|
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.manager.config.pollDuration`|How often the manager polls the config table for updates.|PT1m|
 |`druid.manager.segments.pollDuration`|The duration between polls the Coordinator does for updates to the set of active segments. Generally defines the amount of lag time it can take for the coordinator to notice new segments.|PT1M|
@@ -43,26 +41,22 @@ The coordinator node uses several of the global configs in [Configuration](../co
 |`druid.manager.rules.defaultTier`|The default tier from which default rules will be loaded from.|_default|
 |`druid.manager.rules.alertThreshold`|The duration after a failed poll upon which an alert should be emitted.|PT10M|
 
-Dynamic Configuration
----------------------
+Dynamic 配置
+-----------------------
 
-The coordinator has dynamic configuration to change certain behaviour on the fly. The coordinator a JSON spec object from the Druid [metadata storage](../dependencies/metadata-storage.html) config table. This object is detailed below:
-
-It is recommended that you use the Coordinator Console to configure these parameters. However, if you need to do it via HTTP, the JSON object can be submitted to the overlord via a POST request at:
-
+Coordinator有dynamic配置去改变某些动态行为。Druid[元数据存储](../dependencies/metadata-storage.html)配置表的Coordinator一个JSON规范对象。
+建议你使用Coordinator控制台去配置这些参数。然而，如果你需要通过HTTP去配置，JSON对象可以通过POST请求提交到Overlord，在：
 ```
 http://<COORDINATOR_IP>:<PORT>/druid/coordinator/v1/config
 ```
 
-Optional Header Parameters for auditing the config change can also be specified.
-
-|Header Param Name| Description | Default |
+审计配置的可选头参数可以被指定改变。
+|头参数名|描述|默认|
 |----------|-------------|---------|
 |`X-Druid-Author`| author making the config change|""|
 |`X-Druid-Comment`| comment describing the change being done|""|
 
-A sample coordinator dynamic config JSON object is shown below:
-
+一个Coordinator dynamic配置JSON对象的示例如下：
 ```json
 {
   "millisToWaitBeforeDeleting": 900000,
@@ -76,9 +70,9 @@ A sample coordinator dynamic config JSON object is shown below:
 }
 ```
 
-Issuing a GET request at the same URL will return the spec that is currently in place. A description of the config setup spec is shown below.
+在相同的URL发出一个GET请求将返回适当的说明。一个配置设置规格描述如下。
 
-|Property|Description|Default|
+|属性|描述|默认|
 |--------|-----------|-------|
 |`millisToWaitBeforeDeleting`|How long does the coordinator need to be active before it can start removing (marking unused) segments in metadata storage.|900000 (15 mins)|
 |`mergeBytesLimit`|The maximum number of bytes to merge (for segments).|524288000L|
@@ -89,16 +83,13 @@ Issuing a GET request at the same URL will return the spec that is currently in 
 |`emitBalancingStats`|Boolean flag for whether or not we should emit balancing stats. This is an expensive operation.|false|
 |`killDataSourceWhitelist`|List of dataSources for which kill tasks are sent if property `druid.coordinator.kill.on` is true.|none|
 
-To view the audit history of coordinator dynamic config issue a GET request to the URL -
-
+查看Coordinator dynamic配置的审计历史，发出GET请求到URL－
 ```
 http://<COORDINATOR_IP>:<PORT>/druid/coordinator/v1/config/history?interval=<interval>
 ```
 
-default value of interval can be specified by setting `druid.audit.manager.auditHistoryMillis` (1 week if not configured) in coordinator runtime.properties
-
-To view last <n> entries of the audit history of coordinator dynamic config issue a GET request to the URL -
-
+间隔默认值可以通过在coordinator runtime.properties设置`druid.audit.manager.auditHistoryMillis`（如果没配置则１周）指定多少。
+查看最近n条coordinator dynamic配置的审计员工配置历史，发出GET请求到URL-
 ```
 http://<COORDINATOR_IP>:<PORT>/druid/coordinator/v1/config/history?count=<n>
 ```

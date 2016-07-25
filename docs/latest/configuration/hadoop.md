@@ -2,10 +2,10 @@
 layout: doc_page
 ---
 
-Example Production Hadoop Configuration
-=======================================
+生产Hadoop配置的例子
+====================================================
 
-The following configuration should work relatively well for Druid indexing and Hadoop. In the example, we are using Hadoop 2.4 with EC2 m1.xlarge nodes for NameNodes and cc2.8xlarge nodes for DataNodes.
+以下配置应该对Druid索引和Hadoop工作相对较好。在例子中，我们对NameNodes使用Hadoop2.4的EC2 m1.xlarge节点，DataNades使用Hadoop2.4的cc2.8xlarge节点。
 
 ### Core-site.xml
 

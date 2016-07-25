@@ -52,7 +52,7 @@ Realtime node 使用的几个全球配置在 [配置](../configuration/index.htm
 |`druid.query.groupBy.maxIntermediateRows`|Maximum number of intermediate rows.|50000|
 |`druid.query.groupBy.maxResults`|Maximum number of results.|500000|
 
-##### Search Query Config 搜索查询配置
+##### 搜索查询配置
 
 |属性|描述|默认值|
 |--------|-----------|-------|
