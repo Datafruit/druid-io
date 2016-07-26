@@ -2,56 +2,45 @@
 layout: doc_page
 ---
 
-# Metadata Storage
+# 元数据存储
 
-The Metadata Storage is an external dependency of Druid. Druid uses it to store
-various metadata about the system, but not to store the actual data. There are
-a number of tables used for various purposes described below.
+元数据存储是Druid的外部依赖。Druid使用它来存储各种关于系统的元数据，而不是存储实际数据。
+下面的表用于各种目的描述。
 
-Derby is the default metadata store for Druid, however, it is not suitable for production. 
-[MySQL](../development/extensions-core/mysql.html) and [PostgreSQL](../development/extensions-core/postgresql.html) are more production suitable metadata stores.
-
+Derby是Druid默认的元数据存储，然而，这并不适合生产。
+[MySQL](../development/extensions-core/mysql.html)和[PostgreSQL](../development/extensions-core/postgresql.html)是更多生产适用的元数据存储。
 <div class="note caution">
-Derby is not suitable for production use as a metadata store. Use MySQL or PostgreSQL instead.
+Derby不适用于使用元数据存储生产。使用Mysql或者PostgreSQL代替。
 </div>
 
-## Using derby
+## 使用derby
 
-Add the following to your Druid configuration.
-
+增加下面配置到你的Druid配置。
 ```properties
 druid.metadata.storage.type=derby
 druid.metadata.storage.connector.connectURI=jdbc:derby://localhost:1527//opt/var/druid_state/derby;create=true
 ```
 
 ## MySQL
-  
-See [mysql-metadata-storage extension documentation](../development/extensions-core/mysql.html).  
-  
+
+查阅[mysql-metadata-storage 扩展](../development/extensions-core/mysql.html)
 ## PostgreSQL 
 
-See [postgresql-metadata-storage](../development/extensions-core/postgresql.html). 
+查阅[postgresql-metadata-storage](../development/extensions-core/postgresql.html). 
 
-## Metadata Storage Tables
+## 元数据存储表
 
-### Segments Table
+### Segments 表
 
-This is dictated by the `druid.metadata.storage.tables.segments` property.
+这个是通过 `druid.metadata.storage.tables.segments`属性决定的。
 
-This table stores metadata about the segments that are available in the system.
-The table is polled by the [Coordinator](../design/coordinator.html) to
-determine the set of segments that should be available for querying in the
-system. The table has two main functional columns, the other columns are for
-indexing purposes.
+这个表存储关于系统中可用的Segment元数据。这个表由[Coordinator](../design/coordinator.html)调查确定Segment组，应该用于查询的系统。
+表有两个主要功能列，其他列是索引目的。
 
-The `used` column is a boolean "tombstone". A 1 means that the segment should
-be "used" by the cluster (i.e. it should be loaded and available for requests).
-A 0 means that the segment should not be actively loaded into the cluster. We
-do this as a means of removing segments from the cluster without actually
-removing their metadata (which allows for simpler rolling back if that is ever
-an issue).
+`used`列是一个 boolean "tombstone"。1意味着Segment应该通过集群设置“used”（即它应该加载和用于请求）。
+0意味着Segment不应该加载进集群。我们这样做没有真正地从集群移除片段消除他们的元数据（如果它是一个事件，这允许更简单的roll back。）
 
-The `payload` column stores a JSON blob that has all of the metadata for the segment (some of the data stored in this payload is redundant with some of the columns in the table, that is intentional). This looks something like
+`payload`列存储JSON二进制，有所有的Segment元数据（一些数据存储在这个负载是冗余的，一些表中的列）。如以下：
 
 ```json
 {
@@ -72,38 +61,30 @@ The `payload` column stores a JSON blob that has all of the metadata for the seg
 }
 ```
 
-Note that the format of this blob can and will change from time-to-time.
+注意，这个二进制的格式可以随时改变。
+### Rule 表
 
-### Rule Table
+rule表存储着不同的关于Segment存放位置的rules
+这些rule通过[Coordinator](../design/coordinator.html)使用，当Segment（重新）分配决策的集群。
+### 配置表
 
-The rule table is used to store the various rules about where segments should
-land. These rules are used by the [Coordinator](../design/coordinator.html)
-  when making segment (re-)allocation decisions about the cluster.
+配置表存储Runtime配置对象。我们还没有很多这些表而且我们不确定是否将一直沿用这个机制，
+但这是在Runtime时跨集群改变一些配置参数方法的开始。
 
-### Config Table
+### 相关任务表
 
-The config table is used to store runtime configuration objects. We do not have
-many of these yet and we are not sure if we will keep this mechanism going
-forward, but it is the beginnings of a method of changing some configuration
-parameters across the cluster at runtime.
+在其工作进程中，也有大量的表被创建和被[Indexing Service](../design/indexing-service.html)使用。
 
-### Task-related Tables
+### 审计表
 
-There are also a number of tables created and used by the [Indexing
-Service](../design/indexing-service.html) in the course of its work.
+审计表是用来存储配置变化的审计历史，如rule通过 [Coordinator](../design/coordinator.html)和其他配置变化。
 
-### Audit Table
+## 访问：##
 
-The Audit table is used to store the audit history for configuration changes
-e.g rule changes done by [Coordinator](../design/coordinator.html) and other
-config changes.
+元数据存储只能通过以下访问：
 
-##Accessed By: ##
+1. Indexing Service 节点(如果有的话)
+2. Realtime 节点(如果有的话)
+3. Coordinator 节点
 
-The Metadata Storage is accessed only by:
-
-1. Indexing Service Nodes (if any)
-2. Realtime Nodes (if any)
-3. Coordinator Nodes
-
-Thus you need to give permissions (eg in AWS Security Groups)  only for these machines to access the Metadata storage.
+因此你需要给权限（如在AWS安全组）只对这些机器访问元数据存储。
