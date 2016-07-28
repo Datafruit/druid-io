@@ -2,7 +2,7 @@
 layout: doc_page
 ---
 
-# Papers
+# 证书
 
 * [Druid: 实时分析数据存储](http://static.druid.io/docs/druid.pdf) - 详细论述了Druid的构架。
 
@@ -10,7 +10,7 @@ layout: doc_page
 
 * [RADStack: 开源架构交互分析](http://static.druid.io/docs/radstack.pdf) - 论述了Druid怎么支持实时和批处理工作流。
 
-# Presentations
+# 介绍
 
 * [介绍 Druid](https://www.youtube.com/watch?v=hgmxVPx4vVw) - 讨论Druid背后的动机和系统的体系结构。
 
