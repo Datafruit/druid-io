@@ -4,23 +4,22 @@ layout: doc_page
 
 # Druid Firehoses
 
-Firehoses are used in the [stream-pull](../ingestion/stream-pull.html) ingestion model. They are pluggable and thus the configuration schema can and will vary based on the `type` of the firehose.
+Firehoses是使用在 [stream-pull](../ingestion/stream-pull.html)的摄取模式。他们是可插入的,因此配置模式和Firehoses的`type` 不同。
 
-| Field | Type | Description | Required |
+|字段|类型|描述|要求|
 |-------|------|-------------|----------|
 | type | String | Specifies the type of firehose. Each value will have its own configuration schema, firehoses packaged with Druid are described below. | yes |
 
-## Additional Firehoses
+## 额外的Firehoses
 
-There are several firehoses readily available in Druid, some are meant for examples, others can be used directly in a production environment.
+Druid有几种Firehoses已经是可用的，例如，其他人可以直接在生产环境中使用。
 
-For additional firehoses, please see our [extensions list](../development/extensions.html).
-
+对于额外的Firehoses，请查阅我们的[扩展列表](../development/extensions.html)。
 #### LocalFirehose
-
-This Firehose can be used to read the data from files on local disk.
-It can be used for POCs to ingest data on disk.
-A sample local firehose spec is shown below:
+ 
+这个Firehoses可以用来从本地磁盘文件读取数据。
+这可以为POCs在磁盘上摄取数据。
+本地Firehoses规格示例如下：
 
 ```json
 {
@@ -30,7 +29,7 @@ A sample local firehose spec is shown below:
 }
 ```
 
-|property|description|required?|
+|属性|描述|要求|
 |--------|-----------|---------|
 |type|This should be "local".|yes|
 |filter|A wildcard filter for files. See [here](http://commons.apache.org/proper/commons-io/apidocs/org/apache/commons/io/filefilter/WildcardFileFilter.html) for more information.|yes|
@@ -38,9 +37,9 @@ A sample local firehose spec is shown below:
 
 #### IngestSegmentFirehose
 
-This Firehose can be used to read the data from existing druid segments.
-It can be used ingest existing druid segments using a new schema and change the name, dimensions, metrics, rollup, etc. of the segment.
-A sample ingest firehose spec is shown below -
+这个Firehoses可以用来从现有的Druid Segment读取数据。
+这可以使用一个新的schema和改变Segment的名称，维度，指标，计算等来摄取现有的druid Segment。
+摄取Firehoses规格的示例如下-
 
 ```json
 {
@@ -50,7 +49,7 @@ A sample ingest firehose spec is shown below -
 }
 ```
 
-|property|description|required?|
+|属性|描述|要求|
 |--------|-----------|---------|
 |type|This should be "ingestSegment".|yes|
 |dataSource|A String defining the data source to fetch rows from, very similar to a table in a relational database|yes|
@@ -61,9 +60,8 @@ A sample ingest firehose spec is shown below -
 
 #### CombiningFirehose
 
-This firehose can be used to combine and merge data from a list of different firehoses.
-This can be used to merge data from more than one firehose.
-
+这个Firehoses可以从一列不同的Firehoses结合和合并数据。
+这可以从多个Firehoses合并数据。
 ```json
 {
     "type"  :   "combining",
@@ -71,15 +69,14 @@ This can be used to merge data from more than one firehose.
 }
 ```
 
-|property|description|required?|
+|属性|描述|要求|
 |--------|-----------|---------|
 |type|This should be "combining"|yes|
 |delegates|list of firehoses to combine data from|yes|
 
 #### EventReceiverFirehose
 
-EventReceiverFirehoseFactory can be used to ingest events using an http endpoint.
-
+EventReceiverFirehoseFactory可以使用一个http端点摄取事件。
 ```json
 {
   "type": "receiver",
@@ -87,11 +84,11 @@ EventReceiverFirehoseFactory can be used to ingest events using an http endpoint
   "bufferSize": 10000
 }
 ```
-When using this firehose, events can be sent by submitting a POST request to the http endpoint:
 
+当使用Firehoses时，事件可以通过提交一个POST请求发送到http 端点：
 `http://<peonHost>:<port>/druid/worker/v1/chat/<eventReceiverServiceName>/push-events/`
 
-|property|description|required?|
+|属性|描述|要求|
 |--------|-----------|---------|
 |type|This should be "receiver"|yes|
 |serviceName|name used to announce the event receiver service endpoint|yes|
@@ -99,8 +96,8 @@ When using this firehose, events can be sent by submitting a POST request to the
 
 #### TimedShutoffFirehose
 
-This can be used to start a firehose that will shut down at a specified time.
-An example is shown below:
+这个可以用来启动一个Firehoses，可以在指定时间关闭。
+示例如下：
 
 ```json
 {
@@ -114,7 +111,7 @@ An example is shown below:
 }
 ```
 
-|property|description|required?|
+|属性|描述|要求|
 |--------|-----------|---------|
 |type|This should be "timed"|yes|
 |shutoffTime|time at which the firehose should shut down, in ISO8601 format|yes|

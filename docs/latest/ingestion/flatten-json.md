@@ -2,27 +2,24 @@
 layout: doc_page
 ---
 
-# JSON Flatten Spec
+# JSON 压缩规格
 
-| Field | Type | Description | Required |
+|字段|类型|描述|要求|
 |-------|------|-------------|----------|
 | useFieldDiscovery | Boolean | If true, interpret all fields with singular values (not a map or list) and flat lists (lists of singular values) at the root level as columns. | no (default == true) |
 | fields | JSON Object array | Specifies the fields of interest and how they are accessed | no (default == []) |
 
-Defining the JSON Flatten Spec allows nested JSON fields to be flattened during ingestion time. Only the JSON ParseSpec supports flattening.
+定义JSON压缩规格允许嵌套JSON字段在摄取期间压缩。只有JSON解析规格支持压缩。
+'fields'是一个JSON对象列，描述字段名称和如何访问字段：
+## JSON字段规格
 
-'fields' is a list of JSON Objects, describing the field names and how the fields are accessed:
-
-## JSON Field Spec
-
-| Field | Type | Description | Required |
+|字段|类型|描述|要求|
 |-------|------|-------------|----------|
 | type | String | Type of the field, "root" or "nested". | yes |
 | name | String | This string will be used as the column name when the data has been ingested.  | yes |
 | expr | String | Defines an expression for accessing the field within the JSON object, using [JsonPath](https://github.com/jayway/JsonPath) notation. | yes |
 
-Suppose the event JSON has the following form:
-
+JSON支持以下事件格式：
 ```json
 {
  "timestamp": "2015-09-12T12:10:53.155Z",
@@ -41,9 +38,9 @@ Suppose the event JSON has the following form:
 }
 ```
 
-The column "metrica" is a Long metric column, "hello" is an array of Double metrics, and "nestmet.val" is a nested Long metric. All other columns are dimensions.
+“metrica”列是一个long指标列，“hello”是一组double指标，“nestmet.val”是一个嵌套的long指标。其他列都是维度。
 
-To flatten this JSON, the parseSpec could be defined as follows:
+为了压缩这个JSON，解析规格可以定义如下：
 
 ```json
 "parseSpec": {
@@ -115,12 +112,10 @@ To flatten this JSON, the parseSpec could be defined as follows:
 }
 ```
 
-Fields "dim3", "ignore_me", and "metrica" will be automatically discovered because 'useFieldDiscovery' is true, so they have been omitted from the field spec list.
+字段 "dim3", "ignore_me", 和 "metrica"将会自动地被发现，因为‘useFieldDiscovery’是true，所以它们从字段规格列表中被省略了。
 
-"ignore_me" will be automatically discovered but excluded as specified by dimensionsExclusions.
-
-Aggregators should use the metric column names as defined in the flattenSpec. Using the example above:
-
+"ignore_me"将会自动被发现但是排除通过dimensionsExclusions指定.
+聚合器应该使用压缩规格中定义的列的名称。使用上面的示例：
 ```json
 "metricsSpec" : [ 
 {
@@ -141,10 +136,15 @@ Aggregators should use the metric column names as defined in the flattenSpec. Us
 ]
 ```
 
-Note that:
+注意：
 
-* For convenience, when defining a root-level field, it is possible to define only the field name, as a string, shown with "dim2" above.
-* Enabling 'useFieldDiscovery' will only autodetect fields at the root level with a single value (not a map or list), as well as fields referring to a list of single values. In the example above, "dim1", "dim2", "dim3", "ignore_me", "metrica", and "foo.bar" (at the root) would be automatically detected as columns. The "hello" field is a list of Doubles and will be autodiscovered, but note that the example ingests the individual list members as separate fields. The "world" field must be explicitly defined because its value is a map. The "mixarray" field, while similar to "hello", must also be explicitly defined because its last value is a map.  
-* Duplicate field definitions are not allowed, an exception will be thrown.
-* If auto field discovery is enabled, any discovered field with the same name as one already defined in the field specs will be skipped and not added twice.
-* The JSON input must be a JSON object at the root, not an array. e.g., {"valid": "true"} and {"valid":[1,2,3]} are supported but [{"invalid": "true"}] and [1,2,3] are not.
+* 为了方便，当定义一个root-level字段时，可以只定义字段名，用字符串表示，如上面“dim2”所示。
+
+* 启用'useFieldDiscovery'只会在根级别自动检测单个值的字段(不是一个映射或列表),以及字段指的是单个值的列表。
+ 在上面的示例中, “dim1”、“dim2”、“dim3”、“ignore_me”、“metrica”,和“foo.bar”(在根)将被自动检测为列。
+“hello”字段是一个double列而且能自动被发现， 但是注意,如摄入个体成员作为单独的字段列表。“world”字段必须明确定义，因为它最后的值是一个映射。
+“mixarray”字段,类似于“hello”, 也必须明确定义,因为它最后的值是一个映射。
+
+* 不允许定义重复的字段,会抛出一个异常。
+* 如果字段自动发现是启动的，所有名字相同的字段如一个已经在字段规格定义，就将跳过而不会加载两次。
+* JSON输入必须是root底下的一个JSON对象，而不是一个数组。如{"valid": "true"} 和{"valid":[1,2,3]} 是支持的，而 [{"invalid": "true"}]和 [1,2,3]是不支持的。
