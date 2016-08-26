@@ -2,55 +2,48 @@
 layout: doc_page
 ---
 
-# pull-deps Tool
+# pull-deps 工具
 
-`pull-deps` is a tool that can pull down dependencies to the local repository and lay dependencies out into the extension directory as needed.
-
-`pull-deps` has several command line options, they are as follows:
-
-`-c` or `--coordinate` (Can be specified multiply times)
-
-Extension coordinate to pull down, followed by a maven coordinate, e.g. io.druid.extensions:mysql-metadata-storage
-
-`-h` or `--hadoop-coordinate` (Can be specified multiply times)
-
-Hadoop dependency to pull down, followed by a maven coordinate, e.g. org.apache.hadoop:hadoop-client:2.4.0
+`pull-deps`是一个可以拉下依赖本地存储库,把依赖项根据需要扩展目录的工具。
+`pull-deps`有几个命令行选择，如下：
+`-c` 或者 `--coordinate`（可以指定多个时间）
+扩展坐标下拉,紧随其后的是一个maven坐标,如io.druid.extensions:mysql-metadata-storage
+`-h` or `--hadoop-coordinate` （可以指定多个时间）
+Hadoop依赖拉下来,后跟一个maven坐标,如org.apache.hadoop:hadoop-client：2.4.0
 
 `--no-default-hadoop`
 
-Don't pull down the default hadoop coordinate, i.e., org.apache.hadoop:hadoop-client:2.3.0. If `-h` option is supplied, then default hadoop coordinate will not be downloaded.
-
+不要拉下默认hadoop坐标,即org.apache.hadoop:hadoop-client:2.3.0。如果提供`- h`选项,那么默认的hadoop坐标不会被下载。
 `--clean`
     
-Remove exisiting extension and hadoop dependencies directories before pulling down dependencies.
+下拉依赖之前删除现有的扩展和hadoop依赖性目录。
+`-l` 或者 `--localRepository`
 
-`-l` or `--localRepository`
+ Maven将使用本地repostiry来下载文件。然后pull-deps将这些文件根据需要扩展目录。
+`-r` 或者 `--remoteRepository`
 
-A local repostiry that Maven will use to put downloaded files. Then pull-deps will lay these files out into the extensions directory as needed.
+远程存储库添加到默认的远程存储库列表，包括 https://repo1.maven.org/maven2/ 和 https://metamx.artifactoryonline.com/metamx/pub-libs-releases-local
+`-d` 或者 `--defaultVersion`
+版本用于扩展协调,没有版本信息。例如，如果扩展坐标是 `io.druid.extensions:mysql-metadata-storage`，默认版本是`0.9.0`，那么这个坐标将被看作是 `io.druid.extensions:mysql-metadata-storage:0.9.0`。
 
-`-r` or `--remoteRepository`
+为了运行`pull-deps`，你应该
 
-Add a remote repository to the default remote repository list, which includes https://repo1.maven.org/maven2/ and https://metamx.artifactoryonline.com/metamx/pub-libs-releases-local
+1）指定 `druid.extensions.directory` 和 `druid.extensions.hadoopDependenciesDir`，这两个属性告诉`pull-deps`把扩展放到哪儿。
+如果你不指定它们，默认值将代替，查阅 [配置](../configuration/index.html)。
 
-`-d` or `--defaultVersion`
+2）告诉`pull-deps`使用`-c`或者`-h`选择下载什么，这个后面跟着一个maven坐标。
 
-Version to use for extension coordinate that doesn't have a version information. For example, if extension coordinate is `io.druid.extensions:mysql-metadata-storage`, and default version is `0.9.0`, then this coordinate will be treated as `io.druid.extensions:mysql-metadata-storage:0.9.0`
+示例：
 
-To run `pull-deps`, you should
-
-1) Specify `druid.extensions.directory` and `druid.extensions.hadoopDependenciesDir`, these two properties tell `pull-deps` where to put extensions. If you don't specify them,  default values will be used, see [Configuration](../configuration/index.html).
-
-2) Tell `pull-deps` what to download using `-c` or `-h` option, which are followed by a maven coordinate.
-
-Example:
-
-Suppose you want to download ```druid-rabbitmq```, ```mysql-metadata-storage``` and ```hadoop-client```(both 2.3.0 and 2.4.0) with a specific version, you can run `pull-deps` command with `-c io.druid.extensions:druid-examples:0.9.0`, `-c io.druid.extensions:mysql-metadata-storage:0.9.0`, `-h org.apache.hadoop:hadoop-client:2.3.0` and `-h org.apache.hadoop:hadoop-client:2.4.0`, an example command would be:
+假设你想用指定版本下载```druid-rabbitmq```, ```mysql-metadata-storage```和 ```hadoop-client```( 2.3.0 和 2.4.0)， 
+你可以运行 `pull-deps`，输入以下命令 `-c io.druid.extensions:druid-examples:0.9.0`, `-c io.druid.extensions:mysql-metadata-storage:0.9.0`, `-h org.apache.hadoop:hadoop-client:2.3.0`和 `-h org.apache.hadoop:hadoop-client:2.4.0`。
+示例如下：
 
 ```
 java -classpath "/my/druid/library/*" io.druid.cli.Main tools pull-deps --clean -c io.druid.extensions:mysql-metadata-storage:0.9.0 -c io.druid.extensions.contrib:druid-rabbitmq:0.9.0 -h org.apache.hadoop:hadoop-client:2.3.0 -h org.apache.hadoop:hadoop-client:2.4.0
 ```
 
-Because `--clean` is supplied, this command will first remove the directories specified at `druid.extensions.directory` and `druid.extensions.hadoopDependenciesDir`, then recreate them and start downloading the extensions there. After finishing downloading, if you go to the extension directories you specified, you will see
+因为提供`--clean`,该命令将先删除指定在`druid.extensions.directory` 和 `druid.extensions.hadoopDependenciesDir`的目录,然后重新创建它们,开始下载扩展。完成下载后,如果你扩展指定目录,你会看到
 
 ```
 tree extensions
@@ -92,14 +85,13 @@ hadoop-dependencies/
     ..... lots of jars
 ```
 
-Note that if you specify `--defaultVersion`, you don't have to put version information in the coordinate. For example, if you want both `druid-rabbitmq` and `mysql-metadata-storage` to use version `0.9.0`,  you can change the command above to
+请注意,如果您指定`--defaultVersion`,你不需要把版本信息放到坐标上。例如,如果你想要`druid-rabbitmq`和`mysql-metadata-storage`使用版本`0.9.0`,你可以改变上面的命令
 
 ```
 java -classpath "/my/druid/library/*" io.druid.cli.Main tools pull-deps --defaultVersion 0.9.0 --clean -c io.druid.extensions:mysql-metadata-storage -c io.druid.extensions.contrib:druid-rabbitmq -h org.apache.hadoop:hadoop-client:2.3.0 -h org.apache.hadoop:hadoop-client:2.4.0
 ```
 
 <div class="note info">
-Please note to use the pull-deps tool you must know the Maven groupId, artifactId, and version of your extension.
-
-For Druid community extensions listed <a href="../development/extensions.html">here</a>, the groupId is "io.druid.extensions.contrib" and the artifactId is the name of the extension.
+请注意使用pull-deps工具你必须知道Maven groupId,artifactId,版本的扩展。
+Druid的社区扩展列表<a href="../development/extensions.html">这里</a>,groupId是"io.druid.extensions.contrib"和artifactId是扩展名。
 </div>

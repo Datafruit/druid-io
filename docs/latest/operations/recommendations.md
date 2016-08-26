@@ -2,30 +2,26 @@
 layout: doc_page
 ---
 
-Recommendations
-===============
+建议书
+===================
 
-# Use UTC Timezone
+# 使用UTC时区
 
-We recommend using UTC timezone for all your events and across on your nodes, not just for Druid, but for all data infrastructure. This can greatly mitigate potential query problems with inconsistent timezones. To query in a non-UTC timezone see [query granularities](../querying/granularities.html#period-granularities)
-
+我们建议你所有的事件和你的节点使用UTC时区,不仅是Druid,还有所有数据基础设施。这可以极大地减轻潜在的查询问题和不一致的时区。
+查询non-UTC时区请查阅 [查询粒度](../querying/granularities.html#period-granularities)
 # SSDs
 
-SSDs are highly recommended for historical and real-time nodes if you are not running a cluster that is entirely in memory. SSDs can greatly mitigate the time required to page data in and out of memory.
+历史和实时节点强烈推荐SSDs，如果你不完全在内存中运行一个集群。SSDs可以大大减少内存内外的记录数据所需的时间。
+# 尽可能使用Timeseries和TopN查询而不是GroupBy
+对于设计用例，Timeseries和TopN查询更优化并明显高于groupBy查询。从您的应用程序发布多个topN或timeseries查询可能会比一个groupBy查询更有效率。
+# 段的大小问题
 
-# Use Timeseries and TopN Queries Instead of GroupBy Where Possible
+段一般应在300MB-700MB。许多小的段导致CPU利用率和效率低下，而太多的大的段影响查询性能,尤其是与TopN查询。
 
-Timeseries and TopN queries are much more optimized and significantly faster than groupBy queries for their designed use cases. Issuing multiple topN or timeseries queries from your application can potentially be more efficient than a single groupBy query.
+# Read FAQs阅读常见问题
 
-# Segment sizes matter
+你可以在这里阅读人们常见的问题：
 
-Segments should generally be between 300MB-700MB in size. Too many small segments results in inefficient CPU utilizations and 
-too many large segments impacts query performance, most notably with TopN queries.
+1) [摄取常见问题](../ingestion/faq.html)
 
-# Read FAQs
-
-You should read common problems people have here:
-
-1) [Ingestion-FAQ](../ingestion/faq.html)
-
-2) [Performance-FAQ](../operations/performance-faq.html)
+2) [性能常见问题](../operations/performance-faq.html)
