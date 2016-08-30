@@ -1,17 +1,16 @@
 ---
 layout: doc_page
 ---
-Data Formats for Ingestion
+数据接入的格式
 ==========================
 
-Druid can ingest denormalized data in JSON, CSV, or a delimited form such as TSV, or any custom format. While most examples in the documentation use data in JSON format, it is not difficult to configure Druid to ingest any other delimited data.
-We welcome any contributions to new formats.
+Druid可以接入非规范化的数据，例如JSON，CSV或分隔符形式如TSV，或任何自定义格式。而在这份文档中使用的大多数例子都是用JSON格式的数据文件，配置druid接入任何其他分隔符数据并不困难。我们欢迎贡献任何新的格式。
 
-For additional data formats, please see our [extensions list](../development/extensions.html).
+获取更多信息，请参考 [扩展列表](../development/extensions.html)。
 
-## Formatting the Data
+## 格式化数据
 
-The following are some samples of the data used in the [Wikipedia example](../tutorials/quickstart.html).
+下面是一些数据样例，来自于 [Wikipedia实例](../tutorials/quickstart.html)。
 
 _JSON_
 
@@ -43,16 +42,15 @@ _TSV (Delimited)_
 2013-08-31T12:41:27Z	"Coyote Tango"	"ja"	"cancer"	"true"	"false"	"true"	"false"	"wikipedia"	"Asia"	"Japan"	"Kanto"	"Tokyo"	1	10	-9
 ```
 
-Note that the CSV and TSV data do not contain column heads. This becomes important when you specify the data for ingesting.
+请注意，CSV和TSV数据不包含列头，这在指定要接入的数据时非常重要。
 
-## Custom Formats
+## 自定义格式
 
-Druid supports custom data formats and can use the `Regex` parser or the `JavaScript` parsers to parse these formats. Please note that using any of these parsers for 
-parsing data will not be as efficient as writing a native Java parser or using an external stream processor. We welcome contributions of new Parsers.
+Druid 支持自定义的数据格式，并且能够使用正则表达式`Regex`解析器或者`JavaScript`解析器来解析相应格式。请注意，用任何一种解析器来解析数据的效率要低于本地java解析器或者外部流处理器。我们欢迎贡献新解析器。
 
-## Configuration
+## 配置
 
-All forms of Druid ingestion require some form of schema object. The format of the data to be ingested is specified using the`parseSpec` entry in your `dataSchema`.
+所有形式的Druid的接入需要某种形式的模式对象。数据格式是在`dataschema`下用`parsespec`指定的。
 
 ### JSON
 
@@ -68,11 +66,11 @@ All forms of Druid ingestion require some form of schema object. The format of t
   }
 ```
 
-If you have nested JSON, [Druid can automatically flatten it for you](flatten-json.html).
+如果存在嵌套的JSON, [Druid能够自动地帮你展开](flatten-json.html).
 
 ### CSV
 
-Since the CSV data cannot contain the column names (no header is allowed), these must be added before that data can be processed:
+因为CSV文件不能包含列名（不允许带列头），在数据处理之前，必须添加：
 
 ```json
   "parseSpec":{
@@ -87,7 +85,7 @@ Since the CSV data cannot contain the column names (no header is allowed), these
   }
 ```
 
-The `columns` field must match the columns of your input data in the same order.
+`columns`字段的顺序必须与输入数据的列顺序一致。
 
 ### TSV
 
@@ -105,9 +103,9 @@ The `columns` field must match the columns of your input data in the same order.
   }
 ```
 
-The `columns` field must match the columns of your input data in the same order. 
+`columns`字段的顺序必须与输入数据的列顺序一致。
 
-Be sure to change the `delimiter` to the appropriate delimiter for your data. Like CSV, you must specify the columns and which subset of the columns you want indexed.
+确保将`delimiter`字段改为输入数据对应的分隔符。和CSV格式一样，必须指定列和需要被索引列的子集。
 
 ### Regex
 
@@ -125,8 +123,7 @@ Be sure to change the `delimiter` to the appropriate delimiter for your data. Li
   }
 ```
 
-The `columns` field must match the columns of your regex matching groups in the same order. If columns are not provided, default 
-columns names ("column_1", "column2", ... "column_n") will be assigned. Ensure that your column names include all your dimensions. 
+`columns`字段顺序必须与正则表达式匹配组的列顺序一致。如果列没有被提供，缺省列名（"column_1", "column2", ... "column_n"）将被分配。请确保列名包括所有的维度。
 
 ### JavaScript
 
@@ -143,11 +140,10 @@ columns names ("column_1", "column2", ... "column_n") will be assigned. Ensure t
   }
 ```
 
-Please note with the JavaScript parser that data must be fully parsed and returned as a `{key:value}` format in the JS logic. 
-This means any flattening or parsing multi-dimensional values must be done here.
+请注意，用JavaScript解析器时，数据必须完全被解析，并且在JS logic中以一个`{key:value}`格式返回。这意味着任何扁平化或者解析多维数值必须在这里处理。
 
-### Multi-value dimensions
+### 多值维度
 
-Dimensions can have multiple values for TSV and CSV data. To specify the delimiter for a multi-value dimension, set the `listDelimiter` in the `parseSpec`.
+在TSV和CSV数据中，维度可以包括多个数值。可以设置`parseSpec`下`listDelimiter`来指定多值维度的分隔符。
 
-JSON data can contain multi-value dimensions as well. The multiple values for a dimension must be formatted as a JSON array in the ingested data. No additional `parseSpec` configuration is needed.
+JSON数据也可以包括多值维度。维度中的多个数值必须在接入数据中被格式化为一个JSON数组的形式。不需要额外配置`parseSpec`字段。

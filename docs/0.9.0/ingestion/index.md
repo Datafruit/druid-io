@@ -4,7 +4,7 @@ layout: doc_page
 
 # Ingestion Spec
 
-A Druid ingestion spec consists of 3 components:
+Druid的接入配置由3个部分组成:
 
 ```json
 {
@@ -14,15 +14,15 @@ A Druid ingestion spec consists of 3 components:
 }
 ```
 
-| Field | Type | Description | Required |
+| 字段 | 类型 | 描述 | 必须 |
 |-------|------|-------------|----------|
-| dataSchema | JSON Object | Specifies the the schema of the incoming data. All ingestion specs can share the same dataSchema. | yes |
-| ioConfig | JSON Object | Specifies where the data is coming from and where the data is going. This object will vary with the ingestion method. | yes |
-| tuningConfig | JSON Object | Specifies how to tune various ingestion parameters. This object will vary with the ingestion method. | no |
+| dataSchema | JSON Object | 指定接受数据的模式。所有接入配置可以共享同一个dataSchema。 | 是 |
+| ioConfig | JSON Object | 指定数据来源和数据目的地。这个对象根据接入方法的不同而不同。 | 是 |
+| tuningConfig | JSON Object | 指定如何调整各种接入参数。这个对象根据接入方法的不同而不同 | 否 |
 
-# DataSchema
+# 数据模式
 
-An example dataSchema is shown below:
+dataSchema实例如下：
 
 ```json
 "dataSchema" : {
@@ -66,155 +66,153 @@ An example dataSchema is shown below:
 }
 ```
 
-| Field | Type | Description | Required |
+| 字段 | 类型 | 描述 | 必须 |
 |-------|------|-------------|----------|
-| dataSource | String | The name of the ingested datasource. Datasources can be thought of as tables. | yes |
-| parser | JSON Object | Specifies how ingested data can be parsed. | yes |
-| metricsSpec | JSON Object array | A list of [aggregators](../querying/aggregations.html). | yes |
-| granularitySpec | JSON Object | Specifies how to create segments and roll up data. | yes |
+| dataSource | String | 接入数据源的名称。数据源可以被想象成表 | 是 |
+| parser | JSON Object | 指定如何解析摄入数据 | 是 |
+| metricsSpec | JSON Object array | 一个[aggregators](../querying/aggregations.html)列表. | 是 |
+| granularitySpec | JSON Object | 指定如何创建segments和roll up数据 | 是 |
 
-## Parser
+## 解析器
 
-If `type` is not included, the parser defaults to `string`. For additional data formats, please see our [extensions list](../development/extensions.html).
+如果不指定`type`, 解析器默认为`string`. 获取更多信息，请参考[扩展列表](../development/extensions.html).
 
-### String Parser
+### 字符串解析器
 
-| Field | Type | Description | Required |
+| 字段 | 类型 | 描述 | 必须 |
 |-------|------|-------------|----------|
-| type | String | This should say `string` in general, or `hadoopyString` when used in a Hadoop indexing job. | no |
-| parseSpec | JSON Object | Specifies the format, timestamp, and dimensions of the data. | yes |
+| type | String | 一般设置为`string`,在hadoop indexing任务中应该设置为`hadoopyString`。 | 否 |
+| parseSpec | JSON Object | 指定数据的格式, 时间戳和维度。 | 是 |
 
-### Protobuf Parser
+### Protobuf 解析器
 
-| Field | Type | Description | Required |
+| 字段 | 类型 | 描述 | 必须 |
 |-------|------|-------------|----------|
-| type | String | This should say `protobuf`. | no |
-| parseSpec | JSON Object | Specifies the timestamp and dimensions of the data. Should be a timeAndDims parseSpec. | yes |
+| type | String | 这项应该设定为`protobuf`. | 否 |
+| parseSpec | JSON Object | 指定数据的时间戳和维度。应该是一个timeAndDims parseSpec | 是 |
 
 ### ParseSpec
 
-ParseSpecs serve two purposes:
+ParseSpecs 的两个目的:
 
-- The String Parser use them to determine the format (i.e. JSON, CSV, TSV) of incoming rows.
-- All Parsers use them to determine the timestamp and dimensions of incoming rows.
+- 被字符串解析器用来确定接收数据行的格式（JSON,CSV,TSV）。
+- 被所有解析器用来确定接收数据行的时间戳和维度
 
-If `format` is not included, the parseSpec defaults to `tsv`.
+如果`format`没有被指定, 默认格式为`tsv`.
 
 #### JSON ParseSpec
 
-Use this with the String Parser to load JSON.
+和字符串解析器用来读取JSON.
 
-| Field | Type | Description | Required |
+| 字段 | 类型 | 描述 | 必须 |
 |-------|------|-------------|----------|
-| format | String | This should say `json`. | no |
-| timestampSpec | JSON Object | Specifies the column and format of the timestamp. | yes |
-| dimensionsSpec | JSON Object | Specifies the dimensions of the data. | yes |
-| flattenSpec | JSON Object | Specifies flattening configuration for nested JSON data. See [Flattening JSON](./flatten-json.html) for more info. | no |
+| format | String | 应该设置为`json`。 | 否 |
+| timestampSpec | JSON Object | 指定时间戳的列和格式。 | 是 |
+| dimensionsSpec | JSON Object | 指定数据的维度 | 是 |
+| flattenSpec | JSON Object | 指定嵌套JSON数据的扁平化配置。更多信息，请参考[扁平化JSON](./flatten-json.html)。 | 否 |
 
 #### JSON Lowercase ParseSpec
 
-This is a special variation of the JSON ParseSpec that lower cases all the column names in the incoming JSON data. This parseSpec is required if you are updating to Druid 0.7.x from Druid 0.6.x, are directly ingesting JSON with mixed case column names, do not have any ETL in place to lower case those column names, and would like to make queries that include the data you created using 0.6.x and 0.7.x.
+这是JSON ParseSpec的一个特殊的变化，以小写形式接收的JSON数据的列名。如果Druid版本从0.6.x更新到0.7.x，当直接接收混合大小写列名的JSON数据而没有任何ETL处理这些列名，并且想要查询0.6.x和0.7.x创建的数据时，parseSpec参数是必须的。
 
-| Field | Type | Description | Required |
+| 字段 | 类型 | 描述 | 必须 |
 |-------|------|-------------|----------|
-| format | String | This should say `jsonLowercase`. | yes |
-| timestampSpec | JSON Object | Specifies the column and format of the timestamp. | yes |
-| dimensionsSpec | JSON Object | Specifies the dimensions of the data. | yes |
+| format | String | 应该设置为`jsonLowercase`。 | 是 |
+| timestampSpec | JSON Object | 指定时间戳的列和格式。 | 是 |
+| dimensionsSpec | JSON Object | 指定数据的维度。 | 是 |
 
 #### CSV ParseSpec
 
-Use this with the String Parser to load CSV. Strings are parsed using the net.sf.opencsv library.
+和字符串解析器用来读取CSV。字符串用net.sf.opencsv库来解析。
 
-| Field | Type | Description | Required |
+| 字段 | 类型 | 描述 | 必须 |
 |-------|------|-------------|----------|
-| format | String | This should say `csv`. | yes |
-| timestampSpec | JSON Object | Specifies the column and format of the timestamp. | yes |
-| dimensionsSpec | JSON Object | Specifies the dimensions of the data. | yes |
-| listDelimiter | String | A custom delimiter for multi-value dimensions. | no (default == ctrl+A) |
-| columns | JSON array | Specifies the columns of the data. | yes |
+| format | String | 应该设置为`csv`。 | 是 |
+| timestampSpec | JSON Object | 指定时间戳的列和格式。 | 是 |
+| dimensionsSpec | JSON Object | 指定数据的维度。 | 是 |
+| listDelimiter | String | 多值维度的自定义分隔符。 | 否 (default == ctrl+A) |
+| columns | JSON array | 指定数据的列。 | 是 |
 
 #### TSV / Delimited ParseSpec
 
-Use this with the String Parser to load any delimited text that does not require special escaping. By default,
-the delimiter is a tab, so this will load TSV.
+和字符串解析器用来读取任何被分割的不需要特殊转义的文本。默认分隔符为tab，所以可以读取TSV数据。
 
-| Field | Type | Description | Required |
+| 字段 | 类型 | 描述 | 必须 |
 |-------|------|-------------|----------|
-| format | String | This should say `tsv`. | yes |
-| timestampSpec | JSON Object | Specifies the column and format of the timestamp. | yes |
-| dimensionsSpec | JSON Object | Specifies the dimensions of the data. | yes |
-| delimiter | String | A custom delimiter for data values. | no (default == \t) |
-| listDelimiter | String | A custom delimiter for multi-value dimensions. | no (default == ctrl+A) |
-| columns | JSON String array | Specifies the columns of the data. | yes |
+| format | String | 应该被设置为`tsv`. | 是 |
+| timestampSpec | JSON Object | 指定时间戳的列和格式。 | 是 |
+| dimensionsSpec | JSON Object | 指定数据的维度。 | 是 |
+| delimiter | String | 数据值的分隔符。 | 否 (default == \t) |
+| listDelimiter | String | 多值维度的自定义分隔符。 | 否 (default == ctrl+A) |
+| columns | JSON String array | 定义数据的列。 | 是 |
 
 #### TimeAndDims ParseSpec
 
-Use this with non-String Parsers to provide them with timestamp and dimensions information. Non-String Parsers
-handle all formatting decisions on their own, without using the ParseSpec.
+和非字符串解析器用来提供时间戳和维度信息。非字符串解析器自己处理所有的格式化决定，而无需使用ParseSpec 。
 
-| Field | Type | Description | Required |
+| 字段 | 类型 | 描述 | 必须 |
 |-------|------|-------------|----------|
-| format | String | This should say `timeAndDims`. | yes |
-| timestampSpec | JSON Object | Specifies the column and format of the timestamp. | yes |
-| dimensionsSpec | JSON Object | Specifies the dimensions of the data. | yes |
+| format | String | 应该被设置为`timeAndDims`. | 是 |
+| timestampSpec | JSON Object | 指定时间戳的列和格式。 | 是 |
+| dimensionsSpec | JSON Object | 指定数据的维度。 | 是 |
 
 ### TimestampSpec
 
-| Field | Type | Description | Required |
+| 字段 | 类型 | 描述 | 必须 |
 |-------|------|-------------|----------|
-| column | String | The column of the timestamp. | yes |
-| format | String | iso, millis, posix, auto or any [Joda time](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html) format. | no (default == 'auto' |
+| column | String | 时间戳的列。 | 是 |
+| format | String | iso, millis, posix, auto或者任何[Joda time](http://joda-time.sourceforge.net/apidocs/org/joda/time/format/DateTimeFormat.html)格式. | 否 (default == 'auto' |
 
 ### DimensionsSpec
 
-| Field | Type | Description | Required |
+| 字段 | 类型 | 描述 | 必须 |
 |-------|------|-------------|----------|
-| dimensions | JSON String array | The names of the dimensions. If this is an empty array, Druid will treat all columns that are not timestamp or metric columns as dimension columns. | yes |
-| dimensionExclusions | JSON String array | The names of dimensions to exclude from ingestion. | no (default == [] |
-| spatialDimensions | JSON Object array | An array of [spatial dimensions](../development/geo.html) | no (default == [] |
+| dimensions | JSON String array | 维度的名称。如果为空，Druid将把所有没有时间戳或者度量的列作为维度列。 | 是 |
+| dimensionExclusions | JSON String array | 需排除的接入数据维度的名称 | 否 (default == [] |
+| spatialDimensions | JSON Object array | [特殊维度](../development/geo.html)数组 | 否 (default == [] |
 
 ## GranularitySpec
 
-The default granularity spec is `uniform`.
+默认为`uniform`。
 
 ### Uniform Granularity Spec
 
-This spec is used to generated segments with uniform intervals.
+用来产生均匀间隔的segments。
 
-| Field | Type | Description | Required |
+| 字段 | 类型 | 描述 | 必须 |
 |-------|------|-------------|----------|
-| type | string | The type of granularity spec. | no (default == 'uniform') |
-| segmentGranularity | string | The granularity to create segments at. | no (default == 'DAY') |
-| queryGranularity | string | The minimum granularity to be able to query results at and the granularity of the data inside the segment. E.g. a value of "minute" will mean that data is aggregated at minutely granularity. That is, if there are collisions in the tuple (minute(timestamp), dimensions), then it will aggregate values together using the aggregators instead of storing individual rows. | no (default == 'NONE') |
-| intervals | string | A list of intervals for the raw data being ingested. Ignored for real-time ingestion. | yes for batch, no for real-time |
+| type | string | granularity spec类型。 | 否 (default == 'uniform') |
+| segmentGranularity | string | 创建segments的粒度。 | 否 (default == 'DAY') |
+| queryGranularity | string | 可查询结果的最小粒度和segment内部数据的粒度。例如"minute"表示按分钟聚合数据。也就是说，如果元组之间有冲突(minute(timestamp), dimensions)，将数据聚合在一起而不是分别存储每一行的值。 | 否 (default == 'NONE') |
+| intervals | string | 接入的原始数据的时间间隔列表。忽略real-time接入。 | 是 for batch, 否 for real-time |
 
 ### Arbitrary Granularity Spec
 
-This spec is used to generate segments with arbitrary intervals (it tries to create evenly sized segments). This spec is not supported for real-time processing.
+用来生成任意间隔的segments（它试图创建均匀大小的段）。不支持实时处理。
 
-| Field | Type | Description | Required |
+| 字段 | 类型 | 描述 | 必须 |
 |-------|------|-------------|----------|
-| type | string | The type of granularity spec. | no (default == 'uniform') |
-| queryGranularity | string | The minimum granularity to be able to query results at and the granularity of the data inside the segment. E.g. a value of "minute" will mean that data is aggregated at minutely granularity. That is, if there are collisions in the tuple (minute(timestamp), dimensions), then it will aggregate values together using the aggregators instead of storing individual rows. | no (default == 'NONE') |
-| intervals | string | A list of intervals for the raw data being ingested. Ignored for real-time ingestion. | yes for batch, no for real-time |
+| type | string | granularity spec类型。 | 否 (default == 'uniform') |
+| queryGranularity | string | 可查询结果的最小粒度和segment内部数据的粒度。例如"minute"表示按分钟聚合数据。也就是说，如果元组之间有冲突(minute(timestamp), dimensions)，将数据聚合在一起而不是分别存储每一行的值。 | 否 (default == 'NONE') |
+| intervals | string | 接入的原始数据的时间间隔列表。忽略real-time接入。 | 是 for batch, 否 for real-time |
 
 # IO Config
 
-Stream Push Ingestion: Stream push ingestion with Tranquility does not require an IO Config.
-Stream Pull Ingestion: See [Stream pull ingestion](../ingestion/stream-pull.html).
-Batch Ingestion: See [Batch ingestion](../ingestion/batch-ingestion.html)
+Stream Push Ingestion: 利用Tranquility，不需要IO配置。
+Stream Pull Ingestion: 参考[Stream pull ingestion](../ingestion/stream-pull.html).
+Batch Ingestion: 参考[Batch ingestion](../ingestion/batch-ingestion.html)
 
 # Tuning Config
 
-Stream Push Ingestion: See [Stream push ingestion](../ingestion/stream-push.html).
-Stream Pull Ingestion: See [Stream pull ingestion](../ingestion/stream-pull.html).
-Batch Ingestion: See [Batch ingestion](../ingestion/batch-ingestion.html)
+Stream Push Ingestion: 参考[Stream push ingestion](../ingestion/stream-push.html).
+Stream Pull Ingestion: 参考[Stream pull ingestion](../ingestion/stream-pull.html).
+Batch Ingestion: 参考[Batch ingestion](../ingestion/batch-ingestion.html)
 
 # Evaluating Timestamp, Dimensions and Metrics
 
-Druid will interpret dimensions, dimension exclusions, and metrics in the following order:
+Druid按照如下顺序编译维度，维度排除和度量：
 
-* Any column listed in the list of dimensions is treated as a dimension.
-* Any column listed in the list of dimension exclusions is excluded as a dimension.
-* The timestamp column and columns/fieldNames required by metrics are excluded by default.
-* If a metric is also listed as a dimension, the metric must have a different name than the dimension name.
+* Dimensions里面所列出的所有列都被当作维度。
+* Dimension exclusions里面的所列出的所有列都不作为维度。
+* Timestamp列和metrics需要的columns/fieldNames默认不作为维度。
+* 如果度量同时被列为维度，度量名称和维度名称必须不同。

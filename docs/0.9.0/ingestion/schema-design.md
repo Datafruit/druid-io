@@ -2,54 +2,44 @@
 layout: doc_page
 ---
 
-# Schema Design
+# 模式设计
 
-This page is meant to assist users in designing a schema for data to be ingested in Druid. Druid intakes denormalized data 
-and columns are one of three types: a timestamp, a dimension, or a measure (or a metric/aggregator as they are 
-known in Druid). This follows the [standard naming convention](https://en.wikipedia.org/wiki/Online_analytical_processing#Overview_of_OLAP_systems) 
-of OLAP data.
+这一页主要是为了帮助用户设计Druid待接入数据的模式。Druid摄入的非规范化的数据和列是三种类型之一：时间戳，维度，或者度量（或者Druid所提到的度量/聚合器）。在此之前，可以先了解一下OLAP数据的[标准命名约定](https://en.wikipedia.org/wiki/Online_analytical_processing#Overview_of_OLAP_systems)。
 
-For more detailed information:
+更多详细信息：
 
-* Every row in Druid must have a timestamp. Data is always partitioned by time, and every query has a time filter. Query results can also be broken down by time buckets like minutes, hours, days, and so on.
-* Dimensions are fields that can be filtered on or grouped by. They are always either single Strings or arrays of Strings.
-* Metrics are fields that can be aggregated. They are often stored as numbers (integers or floats) but can also be stored as complex objects like HyperLogLog sketches or approximate histogram sketches.
+* Druid的每一行必须包括一个时间戳。数据总是按照时间来分区，每个查询都包含时间的过滤条件。查询结果同样能够根据时间段细分，比如分钟，小时，天等。
+* 维度可以被过滤或者分组。维度可以是单字符串，也可以是字符串数组。
+* 度量是指可以被聚合的字段。他们往往存储为数字（整数或浮点数），但也可以存储为复杂的对象，比如HyperLogLog或近似的直方图。
 
-Typical production tables (or datasources as they are known in Druid) have fewer than 100 dimensions and fewer 
-than 100 metrics, although, based on user testimony, datasources with thousands of dimensions have been created.
 
-Below, we outline some best practices with schema design:
+典型的生产表（或者Druid所提到的数据源）具有少于100个维度和少于100的度量，尽管有用户创建了上千个维度的数据源。
 
-## High cardinality dimensions (e.g. unique IDs)
+下面,我们概述一些模式设计的最佳做法：
 
-In practice, we see that exact counts for unique IDs are often not required. Storing unique IDs as a column will kill 
-[roll-up](../design/index.html), and impact compression. Instead, storing a sketch of the number of the unique IDs seen, and using that 
-sketch as part of aggregations, will greatly improve performance (up to orders of magnitude performance improvement), and significantly reduce storage. 
-Druid's `hyperUnique` aggregator is based off of Hyperloglog and can be used for unique counts on a high cardinality dimension. 
-For more information, see [here](https://www.youtube.com/watch?v=Hpd3f_MLdXo).
+## 高基数维度 (例如：唯一ID)
 
-## Nested dimensions
+在实践中，我们往往不需要唯一ID的精确计数。存储唯一ID作为列将会结束[roll-up](../design/index.html)，并影响压缩。相反，存储唯一ID的数目的快照，并使用该快照作为聚合的一部分，将极大地提高性能（性能达到量级的提升），并且显著减少存储空间。Druid的hyperUnique聚合是基于关闭Hyperloglog的，可用于高基数维度的唯一计数。更多信息，请参考[这里](https://www.youtube.com/watch?v=Hpd3f_MLdXo)。
 
-At the time of this writing, Druid does not support nested dimensions. Nested dimensions need to be flattened. For example, 
-if you have data of the following form:
+## 嵌套的维度
+
+在写这篇文章的时候，Druid不支持嵌套的维度。嵌套维度需要被扁平化。例如，如果有以下形式的数据：
  
 ```
 {"foo":{"bar": 3}}
 ```
  
-then before indexing it, you should transform it to:
+然后索引它之前，应该把它转换为：
 
 ```
 {"foo_bar": 3}
 ```
 
-## Counting the number of ingested events
+## 接入事件的计数
 
-A count aggregator at ingestion time can be used to count the number of events ingested. However, it is important to note 
-that when you query for this metric, you should use a `longSum` aggregator. A `count` aggregator at query time will return 
-the number of Druid rows for the time interval, which can be used to determine what the roll-up ratio was.
+在摄入数据时，计数聚合器可用于计数摄取事件的数量。但是，需要注意的是，当查询这个指标时应该使用`longSum`聚合器。在查询时，一个` count`聚合器将返回Druid指定时间间隔内的行数，这可以用来确定roll-up比例是多少。
 
-To clarify with an example, if your ingestion spec contains:
+用一个例子来说明，如果ingestion spec包含：
 
 ```
 ...
@@ -61,7 +51,7 @@ To clarify with an example, if your ingestion spec contains:
 ...
 ```
 
-You should query for the number of ingested rows with:
+查询摄入的行数:
 
 ```
 ...
@@ -70,30 +60,24 @@ You should query for the number of ingested rows with:
 ...
 ```
 
-## Schema-less dimensions
+## 无模式维度
 
-If the `dimensions` field is left empty in your ingestion spec, Druid will treat every column that is not the timestamp column, 
-a dimension that has been excluded, or a metric column as a dimension. It should be noted that because of [#658](https://github.com/druid-io/druid/issues/658) 
-these segments will be slightly larger than if the list of dimensions was explicitly specified in lexicographic order. This limitation 
-does not impact query correctness- just storage requirements.
+如果`dimensions`字段在ingestion spec中留空，Druid会处理非时间戳的列，被排除的维度或者作为维度的度量的每一列，应当注意，由于[#658](https://github.com/druid-io/druid/issues/658)， 这些segments将会比在字典顺序中被明确指定的维度列表稍大。此限制不影响查询的正确性-只是存储需求。
 
-## Including the same column as a dimension and a metric
+## 维度和度量中包含相同列
 
-One workflow with unique IDs is to be able to filter on a particular ID, while still being able to do fast unique counts on the ID column. 
-If you are not using schema-less dimensions, this use case is supported by setting the `name` of the metric to something different than the dimension. 
-If you are using schema-less dimensions, the best practice here is to include the same column twice, once as a dimension, and as a `hyperUnique` metric. This may involve 
-some work at ETL time.
+唯一ID的一个工作流程是能够过滤一个特定的ID，同时仍然能够做到ID列的快速唯一计数。如果没有使用无模式的维度，这个用例是通过设置不同的度量`name`和维度`name`来实现。如果正好使用的是无模式维度，在这里最好的做法是，使用相同的列两次，一次作为一个维度，另一次作为`hyperUnique`指标。这可能涉及到一些ETL的工作。
 
-As an example, for schema-less dimensions, repeat the same column:
+这是一个无模式维度的例子，使用了相同的列:
 
 ```
 {"device_id_dim":123, "device_id_met":123}
 ```
 
-and in your `metricsSpec`, include:
+`metricsSpec`包括:
  
 ```
 { "type" : "hyperUnique", "name" : "devices", "fieldName" : "device_id_met" }
 ```
 
-`device_id_dim` should automatically get picked up as a dimension.
+`device_id_dim`应该被自动识别为维度。

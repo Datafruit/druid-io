@@ -1,17 +1,13 @@
 ---
 layout: doc_page
 ---
-# Schema Changes
+# 数据模式修改
 
-Schemas for datasources can change at any time and Druid supports different schemas among segments.
+数据源的数据模式可以在任何时候被修改，Druid支持segments之间不同的数据模式。
 
-## Replacing Segments
+## 替换Segments
 
-Druid uniquely 
-identifies segments using the datasource, interval, version, and partition number. The partition number is only visible in the segment id if 
-there are multiple segments created for some granularity of time. For example, if you have hourly segments, but you 
-have more data in an hour than a single segment can hold, you can create multiple segments for the same hour. These segments will share 
-the same datasource, interval, and version, but have linearly increasing partition numbers.
+Druid使用数据源，时间间隔，版本和分区号来唯一标识segments，在一定时间粒度下创建的多个segments，segment id里面用分区号来区分。例如，按小时的segments，当一个小时的数据量超过了单个segment承载量时，就需要创建多个segments。这些segments将共享同一个数据源，时间间隔和版本，但是含有线性增加的分区号。
 
 ```
 foo_2015-01-01/2015-01-02_v1_0
@@ -19,8 +15,7 @@ foo_2015-01-01/2015-01-02_v1_1
 foo_2015-01-01/2015-01-02_v1_2
 ```
 
-In the example segments above, the dataSource = foo, interval = 2015-01-01/2015-01-02, version = v1, partitionNum = 0. 
-If at some later point in time, you reindex the data with a new schema, the newly created segments will have a higher version id.
+在上面的例子中，数据源＝foo,时间间隔＝2015-01-01/2015-01-02,版本＝v1，分区号＝0.如果重新索引数据到一个新的schema中，将会创建一个更高版本id的新的segments。
 
 ```
 foo_2015-01-01/2015-01-02_v2_0
@@ -28,13 +23,9 @@ foo_2015-01-01/2015-01-02_v2_1
 foo_2015-01-01/2015-01-02_v2_2
 ```
 
-Druid batch indexing (either Hadoop-based or IndexTask-based) guarantees atomic updates on an interval-by-interval basis. 
-In our example, until all `v2` segments for `2015-01-01/2015-01-02` are loaded in a Druid cluster, queries exclusively use `v1` segments. 
-Once all `v2` segments are loaded and queryable, all queries ignore `v1` segments and switch to the `v2` segments. 
-Shortly afterwards, the `v1` segments are unloaded from the cluster.
+Druid批处理索引（无论是Hadoop-based还是IndexTask-based）保证基于时间段的原子更新。在我们的例子中，在`2015-1-1/ 2015-01-02`所有`V2`segments在Druid集群被加载之前，查询只使用`V1`segments。一旦所有`V2`segments被加载并且可查询，所有查询忽略`V1`segments并切换到`V2`segments。然后，`V1`segments从集群中卸载。
 
-Note that updates that span multiple segment intervals are only atomic within each interval. They are not atomic across the entire update. 
-For example, you have segments such as the following:
+需要注意的是跨越多个segment间隔的更新只有在每一个时间间隔内是原子的。对于整个更新来说并不是原子的。例如，下面的segments：
 
 ```
 foo_2015-01-01/2015-01-02_v1_0
@@ -42,8 +33,7 @@ foo_2015-01-02/2015-01-03_v1_1
 foo_2015-01-03/2015-01-04_v1_2
 ```
 
-`v2` segments will be loaded into the cluster as soon as they are built and replace `v1` segments for the period of time the 
-segments overlap. Before v2 segments are completely loaded, your cluster may have a mixture of `v1` and `v2` segments.
+在segments重叠的这段时间，`V2`segments将在编译并替换`V1`segments时尽快被加载到集群。在`V2`segments被完全加载后，集群可能会同时存在`V1`和`V2`的segments。
  
 ```
 foo_2015-01-01/2015-01-02_v1_0
@@ -51,11 +41,9 @@ foo_2015-01-02/2015-01-03_v2_1
 foo_2015-01-03/2015-01-04_v1_2
 ``` 
  
-In this case, queries may hit a mixture of `v1` and `v2` segments.
+在这个实例中，查询可能会同时命中`V1`和`V2`的segments。
 
-## Different Schemas Among Segments
+## Segments之间的不同模式
 
-Druid segments for the same datasource may have different schemas. If a string column (dimension) exists in one segment but not 
-another, queries that involve both segments still work. Queries for the segment missing the dimension will behave as if the dimension has only null values. 
-Similarly, if one segment has a numeric column (metric) but another does not, queries on the segment missing the 
-metric will generally "do the right thing". Aggregations over this missing metric behave as if the metric were missing.
+Druid相同数据源的segments可能含有不同的数据模式，如果一个字符串列(维度)只在一个segment中存在，涉及到两个segments的查询仍然有效。查询缺少维度的segment将会为视为维度只包含null值。同样的，如果一个数值列(度量)只在一个segment中存在，查询缺少度量的segment时一般会“做正确的事情”。在缺失的度量上做聚合被视为度量缺失。
+
