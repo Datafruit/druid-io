@@ -2,18 +2,18 @@
 layout: doc_page
 ---
 
-# Graphite Emitter
+# Graphite 发射器
 
-## Introduction
+## 介绍
+ 
+这个扩展发出Druid指标到graphite carbon服务器。
+[pickled](http://graphite.readthedocs.org/en/latest/feeding-carbon.html#the-pickle-protocol)后发送事件；
+批处理的大小是可配置的。
+## 配置
 
-This extension emits druid metrics to a graphite carbon server.
-Events are sent after been [pickled](http://graphite.readthedocs.org/en/latest/feeding-carbon.html#the-pickle-protocol); the size of the batch is configurable. 
+所有的graphite emitter配置参数是在 `druid.emitter.graphite`下面。
 
-## Configuration
-
-All the configuration parameters for graphite emitter are under `druid.emitter.graphite`.
-
-|property|description|required?|default|
+|属性|描述|要求|默认|
 |--------|-----------|---------|-------|
 |`druid.emitter.graphite.hostname`|The hostname of the graphite server.|yes|none|
 |`druid.emitter.graphite.port`|The port of the graphite server.|yes|none|
@@ -23,35 +23,34 @@ All the configuration parameters for graphite emitter are under `druid.emitter.g
 |`druid.emitter.graphite.maxQueueSize`| Maximum size of the queue used to buffer events. |no|`MAX_INT`|
 |`druid.emitter.graphite.alertEmitters`| List of emitters where alerts will be forwarded to. |no| empty list (no forwarding)|
  
-### Druid to Graphite Event Converter
+### Druid到Graphite的事件转换器 
  
-Graphite Event Converter defines a mapping between druid metrics name plus dimensions to a Graphite metric path.
-Graphite metric path is organized using the following schema:
+Graphite事件转换器定义了一个druid指标名称扩展维度到一个Graphite指标路径之间的映射。
+Graphite 指标路径是用以下模式组织的：
+
 `<namespacePrefix>.[<druid service name>].[<druid hostname>].<druid metrics dimensions>.<druid metrics name>`
-Properly naming the metrics is critical to avoid conflicts, confusing data and potentially wrong interpretation later on.
+正确的命名指标是为了避免争议，混淆数据和潜在的错误解释。
 
-Example `druid.historical.hist-host1_yahoo_com:8080.MyDataSourceName.GroupBy.query/time`:
+`druid.historical.hist-host1_yahoo_com:8080.MyDataSourceName.GroupBy.query/time`示例：
 
- * `druid` -> namespace prefix 
- * `historical` -> service name 
- * `hist-host1.yahoo.com:8080` -> druid hostname
- * `MyDataSourceName` -> dimension value 
- * `GroupBy` -> dimension value
- * `query/time` -> metric name
+ * `druid` -> 命名空间前缀
+ * `historical` -> 服务器名称
+ * `hist-host1.yahoo.com:8080` -> druid主机名称
+ * `MyDataSourceName` -> 维度值
+ * `GroupBy` -> 维度值
+ * `query/time` -> 指标名称
 
-We have two different implementation of event converter:
+我们有两种不同的事件转换执行方法：
 
-#### Send-All converter
+#### 发送所有转换器
+ 
+第一种方法叫做`all`,将发送所有的Druid服务器指标事件。
 
-The first implementation called `all`, will send all the druid service metrics events. 
-The path will be in the form `<namespacePrefix>.[<druid service name>].[<druid hostname>].<dimensions values ordered by dimension's name>.<metric>`
-User has control of `<namespacePrefix>.[<druid service name>].[<druid hostname>].`
-
-You can omit the hostname by setting `ignoreHostname=true`
-`druid.SERVICE_NAME.dataSourceName.queryType.query.time`
-
-You can omit the service name by setting `ignoreServiceName=true`
-`druid.HOSTNAME.dataSourceName.queryType.query.time`
+路径格式为`<namespacePrefix>.[<druid service name>].[<druid hostname>].<dimensions values ordered by dimension's name>.<metric>`
+用户可以控制`<namespacePrefix>.[<druid service name>].[<druid hostname>].`
+ 
+您可以通过设置 `ignoreHostname=true``druid.SERVICE_NAME.dataSourceName.queryType.query.time`删除主机名称。
+您可以通过设置`ignoreServiceName=true``druid.HOSTNAME.dataSourceName.queryType.query.time`删除服务器名称。
 
 ```json
 
@@ -59,15 +58,15 @@ druid.emitter.graphite.eventConverter={"type":"all", "namespacePrefix": "druid.t
 
 ```
 
-#### White-list based converter
+#### 基于white-list的转换器
 
-The second implementation called `whiteList`, will send only the white listed metrics and dimensions.
-Same as for the `all` converter user has control of `<namespacePrefix>.[<druid service name>].[<druid hostname>].`
-White-list based converter comes with the following  default white list map located under resources in `./src/main/resources/defaultWhiteListMap.json`
+第二种方法叫做`whiteList`,将只发送白名单列表的指标和维度。
+与`all`转换器一样，用户可以控制`<namespacePrefix>.[<druid service name>].[<druid hostname>].`
+基于white-list的转换器附带`./src/main/resources/defaultWhiteListMap.json`下的本地资源默认的白名单列表。
 
-Although user can override the default white list map by supplying a property called `mapPath`.
-This property is a String containing  the path for the file containing **white list map Json object**.
-For example the following converter will read the map from the file `/pathPrefix/fileName.json`.  
+尽管用户可以通过应用`mapPath`属性重写默认的白名单列表。
+这个属性是一个含有**白名单列表映射json对象**的文件路径的字符串。
+例如下面的转换器将从文件`/pathPrefix/fileName.json`读取地址。
 
 ```json
 
@@ -75,4 +74,4 @@ druid.emitter.graphite.eventConverter={"type":"whiteList", "namespacePrefix": "d
 
 ```
 
-**Druid emits a huge number of metrics we highly recommend to use the `whiteList` converter**
+**当Druid发出大量的指标时，我们强烈建议使用`whiteList`转换器**

@@ -4,15 +4,15 @@ layout: doc_page
 
 # HDFS
 
-Make sure to [include](../../operations/including-extensions.html) `druid-hdfs-storage` as an extension.
+请确保[包含](../../operations/including-extensions.html) `druid-hdfs-storage` 作为一个扩展。
 
-## Deep Storage 
+## 深存储 
 
-### Configuration
+### 配置
 
-|Property|Possible Values|Description|Default|
+|属性|可能的值|描述|默认|
 |--------|---------------|-----------|-------|
 |`druid.storage.type`|hdfs||Must be set.|
 |`druid.storage.storageDirectory`||Directory for storing segments.|Must be set.|
 
-If you are using the Hadoop indexer, set your output directory to be a location on Hadoop and it will work
+如果你正在使用Hadoop索引，设置你的输出目录为Hadoop上的位置，然后它将开始工作。

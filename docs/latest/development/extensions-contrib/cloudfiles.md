@@ -2,13 +2,13 @@
 layout: doc_page
 ---
 
-# Rackspace Cloud Files
+# Rackspace 云文件
 
-## Deep Storage
+## 深存储
 
-[Rackspace Cloud Files](http://www.rackspace.com/cloud/files/) is another option for deep storage. This requires some additional druid configuration.
+[Rackspace 云文件](http://www.rackspace.com/cloud/files/)是另一个深存储选择。
 
-|Property|Possible Values|Description|Default|
+|属性|可能的值|描述|默认|
 |--------|---------------|-----------|-------|
 |`druid.storage.type`|cloudfiles||Must be set.|
 |`druid.storage.region`||Rackspace Cloud Files region.|Must be set.|
@@ -24,15 +24,14 @@ layout: doc_page
 
 #### StaticCloudFilesFirehose
 
-This firehose ingests events, similar to the StaticAzureBlobStoreFirehose, but from Rackspace's Cloud Files.
+这个Firehose摄取事件与StaticAzureBlobStoreFirehose相似，但是它是从Rackspace云文件摄取。
+数据是换行分隔符，每行有一个JSON对象，而且按照每个 `InputRowParser`配置解析。
 
-Data is newline delimited, with one JSON object per line and parsed as per the `InputRowParser` configuration.
+blobs与Racksapce云文件深存储函数共享一个存储帐号,但是blobs可以在一个不同的容器里。
 
-The storage account is shared with the one used for Racksapce's Cloud Files deep storage functionality, but blobs can be in a different region and container.
+与Azure blobstore一样,如果扩展以.gz结尾，则假定为gzipped。
 
-As with the Azure blobstore, it is assumed to be gzipped if the extension ends in .gz
-
-Sample spec:
+示例规范：
 
 ```json
 "firehose" : {
@@ -52,14 +51,14 @@ Sample spec:
 }
 ```
 
-|property|description|default|required?|
+|属性|可能的值|描述|默认|
 |--------|-----------|-------|---------|
 |type|This should be "static-cloudfiles".|N/A|yes|
 |blobs|JSON array of Cloud Files blobs.|N/A|yes|
 
-Cloud Files Blobs:
+云文件Blobs:
 
-|property|description|default|required?|
+|属性|可能的值|描述|默认|
 |--------|-----------|-------|---------|
 |container|Name of the Cloud Files container|N/A|yes|
 |path|The path where data is located.|N/A|yes|

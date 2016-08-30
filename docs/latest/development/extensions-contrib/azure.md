@@ -4,11 +4,12 @@ layout: doc_page
 
 # Microsoft Azure
 
-## Deep Storage
+## 深存储
+ 
+[Microsoft Azure Storage](http://azure.microsoft.com/en-us/services/storage/) 是深存储的另一个选择。
+这个要求一些额外的Druid配置。
 
-[Microsoft Azure Storage](http://azure.microsoft.com/en-us/services/storage/) is another option for deep storage. This requires some additional druid configuration.
-
-|Property|Possible Values|Description|Default|
+|属性|可能的值|描述|默认|
 |--------|---------------|-----------|-------|
 |`druid.storage.type`|azure||Must be set.|
 |`druid.azure.account`||Azure Storage account name.|Must be set.|
@@ -17,21 +18,19 @@ layout: doc_page
 |`druid.azure.protocol`|http or https||https|
 |`druid.azure.maxTries`||Number of tries before cancel an Azure operation.|3|
 
-See [Azure Services](http://azure.microsoft.com/en-us/pricing/free-trial/) for more information.
+查阅[Azure Services](http://azure.microsoft.com/en-us/pricing/free-trial/) 了解更多。
 
 ## Firehose
 
 #### StaticAzureBlobStoreFirehose
+这个Firehose摄取事件与 StaticS3Firehose相似，但它是从Azure Blob Store摄取。
 
-This firehose ingests events, similar to the StaticS3Firehose, but from an Azure Blob Store.
+数据是换行分隔符，每行有一个JSON对象，而且按照每个 `InputRowParser`配置解析。
 
-Data is newline delimited, with one JSON object per line and parsed as per the `InputRowParser` configuration.
+blobs与Azure深存储函数共享一个存储帐号,但是blobs可以在一个不同的容器里。
 
-The storage account is shared with the one used for Azure deep storage functionality, but blobs can be in a different container.
-
-As with the S3 blobstore, it is assumed to be gzipped if the extension ends in .gz
-
-Sample spec:
+与S3 blobstore一样,如果扩展以.gz结尾，则假定为gzipped。
+示例规范：
 
 ```json
 "firehose" : {
@@ -49,14 +48,14 @@ Sample spec:
 }
 ```
 
-|property|description|default|required?|
+|属性|描述|默认|要求？|
 |--------|-----------|-------|---------|
 |type|This should be "static-azure-blobstore".|N/A|yes|
 |blobs|JSON array of [Azure blobs](https://msdn.microsoft.com/en-us/library/azure/ee691964.aspx).|N/A|yes|
 
 Azure Blobs:
 
-|property|description|default|required?|
+|属性|描述|默认|要求？|
 |--------|-----------|-------|---------|
 |container|Name of the azure [container](https://azure.microsoft.com/en-us/documentation/articles/storage-dotnet-how-to-use-blobs/#create-a-container)|N/A|yes|
 |path|The path where data is located.|N/A|yes|

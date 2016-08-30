@@ -2,19 +2,25 @@
 layout: doc_page
 ---
 
-## DataSketches aggregator
+## DataSketches 聚合
 
-Druid aggregators based on [datasketches](http://datasketches.github.io/) library. Note that sketch algorithms are approximate; see details in the "Accuracy" section of the datasketches doc. 
-At ingestion time, this aggregator creates the theta sketch objects which get stored in Druid segments. Logically speaking, a theta sketch object can be thought of as a Set data structure. At query time, sketches are read and aggregated (set unioned) together. In the end, by default, you receive the estimate of the number of unique entries in the sketch object. Also, you can use post aggregators to do union, intersection or difference on sketch columns in the same row. 
-Note that you can use `thetaSketch` aggregator on columns which were not ingested using same, it will return estimated cardinality of the column. It is recommended to use it at ingestion time as well to make querying faster.
+Druid聚合器基于[datasketches](http://datasketches.github.io/)库。注意草图算法是近似的；
+在datasketches文档的“Accuracy”章节查阅更多细节。
+在摄取时，这个聚合器创建存储在druid段的θ草图对象。
 
-To use the datasketch aggregators, make sure you [include](../../operations/including-extensions.html) the extension in your config file:
+从逻辑上讲,θ草图对象可以被认为是一组数据结构。在查询时,读取和聚合草图(联合)在一起。
+在最后，默认情况下，你收到草图对象中的唯一条目对象的估计数量。
+而且，你可以使用post aggregator把同一行中的列并集，交集或不同草图。
+注意你可以在列中使用`thetaSketch`聚合器，它将不会使用相同的摄取，它将返回列的粒度估算值。
+这建议我们在摄取时使用它也可以让查询快些。
+
+为了使用datasketch聚合，请确保你的配置文件中[包含](../../operations/including-extensions.html)扩展：
 
 ```
 druid.extensions.loadList=["druid-datasketches"]
 ```
 
-### Aggregators
+### 聚合
 
 ```json
 {
@@ -26,7 +32,7 @@ druid.extensions.loadList=["druid-datasketches"]
  }
 ```
 
-|property|description|required?|
+|属性|描述|要求|
 |--------|-----------|---------|
 |type|This String should always be "thetaSketch"|yes|
 |name|A String for the output (result) name of the calculation.|yes|
@@ -34,9 +40,9 @@ druid.extensions.loadList=["druid-datasketches"]
 |isInputThetaSketch|This should only be used at indexing time if your input data contains theta sketch objects. This would be the case if you use datasketches library outside of Druid, say with Pig/Hive, to produce the data that you are ingesting into Druid |no, defaults to false|
 |size|Must be a power of 2. Internally, size refers to the maximum number of entries sketch object will retain. Higher size means higher accuracy but more space to store sketches. Note that after you index with a particular size, druid will persist sketch in segments and you will use size greater or equal to that at query time. See [theta-size](http://datasketches.github.io/docs/ThetaSize.html) for details. In general, We recommend just sticking to default size. |no, defaults to 16384|
 
-### Post Aggregators
+### post 聚合器
 
-#### Sketch Estimator
+#### 草图估计量
 
 ```json
 {
@@ -46,7 +52,7 @@ druid.extensions.loadList=["druid-datasketches"]
 }
 ```
 
-#### Sketch Operations
+#### 草图操作
 
 ```json
 {
@@ -58,20 +64,20 @@ druid.extensions.loadList=["druid-datasketches"]
 }
 ```
 
-### Examples
+### 示例
 
-Assuming, you have a dataset containing (timestamp, product, user_id). You want to answer questions like
+假设，你有一个数据组包含(timestamp, product, user_id)。你要解决如下问题
 
-How many unique users visited product A?
-How many unique users visited both product A and product B?
+多少个用户访问产品A？
+多少个用户访问了产品A和产品B？
 
-to answer above questions, you would index your data using following aggregator.
+为了解决上面的问题，你应该使用下面的聚合器索引你的数据。
 
 ```json
 { "type": "thetaSketch", "name": "user_id_sketch", "fieldName": "user_id" }
 ```
 
-then, sample query for, How many unique users visited product A?
+然后，有多少个用户访问了产品A?示例如下
 
 ```json
 {
@@ -87,7 +93,7 @@ then, sample query for, How many unique users visited product A?
 }
 ```
 
-sample query for, How many unique users visited both product A and B?
+示例查询，有多少个用户访问了产品A和产品B？
 
 ```json
 {

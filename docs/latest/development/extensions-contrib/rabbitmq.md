@@ -8,12 +8,9 @@ layout: doc_page
 
 #### RabbitMQFirehose
 
-This firehose ingests events from a define rabbit-mq queue.
-
-**Note:** Add **amqp-client-3.2.1.jar** to lib directory of druid to use this firehose.
-
-A sample spec for rabbitmq firehose:
-
+从定义消息队列中摄取firehose事件。
+**注意：**增加**amqp-client-3.2.1.jar**到druid目录下使用这个Firehose。
+消息队列firehose示例规范：
 ```json
 "firehose" : {
    "type" : "rabbitmq",
@@ -39,7 +36,7 @@ A sample spec for rabbitmq firehose:
 }
 ```
 
-|property|description|default|required?|
+|属性|描述|默认|要求|
 |--------|-----------|-------|---------|
 |type|This should be "rabbitmq"|N/A|yes|
 |host|The hostname of the RabbitMQ broker to connect to|localhost|no|
