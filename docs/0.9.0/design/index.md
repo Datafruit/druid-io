@@ -25,7 +25,7 @@ Druid是一个开源的数据存储,为[OLAP](http://en.wikipedia.org/wiki/Onlin
 
 * **Dimension列**: Dimensions对应事件的维度,通常用于筛选过滤数据。
 在我们例子中的数据有四个dimensions: publisher, advertiser, gender, and country。
-它们每一个都可以看作是横向数据切片轴。
+它们每一个都可以看作是数据横向切片轴。
 
 * **Metric列**: Metrics是用于聚合和计算的列。在我们的例子中,click和price就是metrics。
 Metrics通常是数字,并且包含支持count、sum、mean等计算操作。
