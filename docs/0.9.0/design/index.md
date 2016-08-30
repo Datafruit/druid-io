@@ -80,7 +80,7 @@ Segments通过datasource, interval, version, 和一个可选的partition number�
 
 提升Druid速度部分依赖于它怎样存储数据。借鉴search infrastructure的思想,Druid创建不变的快照数据,为分析查询提供极优的数据结构来存储。
 
-Druid是列式存储,这就意味这每一个列都是单独存储,在查询的过程中Druid只扫描查询呢所需的列即可。不同的列可以采用不同的压缩方式,也可以关联不同的索引。
+Druid是列式存储,这就意味这每一个列都是单独存储,在查询的过程中Druid只扫描查询所需的列即可。不同的列可以采用不同的压缩方式,也可以关联不同的索引。
 
 Druid的索引是基于每一个分片(即segment)上的。
 
