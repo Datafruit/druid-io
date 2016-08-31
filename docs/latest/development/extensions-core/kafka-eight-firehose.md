@@ -4,11 +4,10 @@ layout: doc_page
 
 # Kafka Eight Firehose
 
-Make sure to [include](../../operations/including-extensions.html) `druid-kafka-eight` as an extension.
+请确保[包含](../../operations/including-extensions.html) `druid-kafka-eight`作为一个扩展。
 
-This firehose acts as a Kafka 0.8.x consumer and ingests data from Kafka.
-
-Sample spec:
+这个消防带作为Kafka 0.8.x用户和从kafka摄取数据。
+示例规范：
 
 ```json
 "firehose": {
@@ -27,7 +26,7 @@ Sample spec:
 }
 ```
 
-|property|description|required?|
+|属性|描述|要求|
 |--------|-----------|---------|
 |type|This should be "kafka-0.8"|yes|
 |consumerProps|The full list of consumer configs can be [here](https://kafka.apache.org/08/configuration.html).|yes|

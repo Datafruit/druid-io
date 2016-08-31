@@ -4,18 +4,14 @@ layout: doc_page
 
 Druid vs Spark
 ==============
+Druid 和Spark是互补的解决方案，因为Druid可以用来加快Spark的OLAP查询
 
-Druid and Spark are complementary solutions as Druid can be used to accelerate OLAP queries in Spark.
+Spark是一个集群计算框架，其概念建立在弹性分布式数据集(RDDs)而且被视为一个后台分析平台。
+RDDs通过保存中间结果在内存中使数据能重用，和使Spark为迭代算法提供快速计算。
 
-Spark is a cluster computing framework built around the concept of Resilient Distributed Datasets (RDDs) and
-can be viewed as a back-office analytics platform.  RDDs enable data reuse by persisting intermediate results
-in memory and enable Spark to provide fast computations for iterative algorithms.
-This is especially beneficial for certain work flows such as machine
-learning, where the same operation may be applied over and over
-again until some result is converged upon.  Spark provides analysts with
-the ability to run queries and analyze large amounts of data with a
-wide array of different algorithms.
+这一点尤其有利于某些工作流程如机器学习，同样的操作可以重复应用直到一些结果是重复的。
+Spark为分析师提供了运行查询的能力和分析大量的数据各种不同的算法。
 
-Druid is designed to power analytic applications and focuses on the latencies to ingest data and serve queries
-over that data. If you were to build an application where users could
-arbitrarily explore data, the latencies seen by using Spark will likely be too slow for an interactive experience.
+Druid是为了权力分析应用程序和侧重于这些数据的延迟摄取数据和查询服务。
+如果你想建立一个应用程序，用户可以任意探索数据，使用Spark的延迟可能对互动体验太慢。
+

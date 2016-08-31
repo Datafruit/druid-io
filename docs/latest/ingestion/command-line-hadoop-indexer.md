@@ -2,9 +2,9 @@
 layout: doc_page
 ---
 
-# Command Line Hadoop Indexer
+# 命令行Hadoop索引器
 
-To run:
+运行：
 
 ```
 java -Xmx256m -Duser.timezone=UTC -Dfile.encoding=UTF-8 -classpath lib/*:<hadoop_config_dir> io.druid.cli.Main index hadoop <spec_file>
@@ -12,13 +12,12 @@ java -Xmx256m -Duser.timezone=UTC -Dfile.encoding=UTF-8 -classpath lib/*:<hadoop
 
 ## Options
 
-- "--coordinate" - provide a version of Hadoop to use. This property will override the default Hadoop coordinates. Once specified, Druid will look for those Hadoop dependencies from the location specified by `druid.extensions.hadoopDependenciesDir`.
-- "--no-default-hadoop" - don't pull down the default hadoop version
-
+- "--Coordinate" - 提供一个Hadoop版本使用。这个属性将覆盖默认的Hadoop Coordinate。一旦指定，Druid将通过从指定`druid.extensions.hadoopDependenciesDir`位置查找那些Hadoop依赖关系。
+- "--no-default-hadoop" - 不要破坏默认的hadoop版本
 ## Spec file
 
-The spec file needs to contain a JSON object where the contents are the same as the "spec" field in the Hadoop index task. 
-In addition, the following fields need to be added to the ioConfig:
+规范文件需要包含一个JSON对象，内容与Hadoop索引任务的“spec”字段相同。
+另外，下面的字段需要增加到ioConfig：
 
 ```
       "ioConfig" : {
@@ -34,7 +33,7 @@ In addition, the following fields need to be added to the ioConfig:
       },
 ```    
 
-and the following field need to be added to the tuningConfig:
+还有下面的字段需要增加到tuningConfig:
 
 ```
   "tuningConfig" : {
@@ -44,11 +43,11 @@ and the following field need to be added to the tuningConfig:
   }
 ```    
 
-#### Metadata Update Job Spec
+#### 元数据更新工作说明
 
-This is a specification of the properties that tell the job how to update metadata such that the Druid cluster will see the output segments and load them.
+这个是一个属性规范说明，讲述怎么更新元数据，如Druid集群将输出Segment和加载他们。
 
-|Field|Type|Description|Required|
+|字段|类型|描述|要求|
 |-----|----|-----------|--------|
 |type|String|"metadata" is the only value available.|yes|
 |connectURI|String|A valid JDBC url to metadata storage.|yes|
@@ -56,19 +55,18 @@ This is a specification of the properties that tell the job how to update metada
 |password|String|password for db.|yes|
 |segmentTable|String|Table to use in DB.|yes|
 
-These properties should parrot what you have configured for your [Coordinator](../design/coordinator.html).
+这些属性应该模仿[Coordinator](../design/coordinator.html)的配置。
 
 #### segmentOutputPath Config
 
-|Field|Type|Description|Required|
+|字段|类型|描述|要求|
 |-----|----|-----------|--------|
 |segmentOutputPath|String|the path to dump segments into.|yes|
 
 #### workingPath Config
 
-|Field|Type|Description|Required|
+|字段|类型|描述|要求|
 |-----|----|-----------|--------|
 |workingPath|String|the working path to use for intermediate results (results between Hadoop jobs).|no (default == '/tmp/druid-indexing')|
- 
-Please note that the command line Hadoop indexer doesn't have the locking capabilities of the indexing service, so if you choose to use it, 
-you have to take caution to not override segments created by real-time processing (if you that a real-time pipeline set up).
+
+请注意，命令行Hadoop索引器没有索引服务的锁定权限，如果你选择使用它，你必须注意不能覆盖real-time处理创建的Segment（如果你安装了real-time流）。

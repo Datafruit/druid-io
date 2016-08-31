@@ -2,54 +2,50 @@
 layout: doc_page
 ---
 # ZooKeeper
-Druid uses [ZooKeeper](http://zookeeper.apache.org/) (ZK) for management of current cluster state. The operations that happen over ZK are
+Druid使用[ZooKeeper](http://zookeeper.apache.org/) （ZK）管理当前集群状态。Zk的操作是
 
-1.  [Coordinator](../design/coordinator.html) leader election
-2.  Segment "publishing" protocol from [Historical](../design/historical.html) and [Realtime](../design/realtime.html)
-3.  Segment load/drop protocol between [Coordinator](../design/coordinator.html) and [Historical](../design/historical.html)
-4.  [Overlord](../design/indexing-service.html) leader election
-5.  [Indexing Service](../design/indexing-service.html) task management
+1.  [Coordinator](../design/coordinator.html) 首选
+2. Segment从 [Historical](../design/historical.html) 和 [Realtime](../design/realtime.html)“发布”协议
+3. Segment加载/停止[Coordinator](../design/coordinator.html) 和 [Historical](../design/historical.html) 之间的协议
+4.  [Overlord](../design/indexing-service.html)  首选
+5.  [Indexing Service](../design/indexing-service.html) 任务管理
+
 
 ### Coordinator Leader Election
 
-We use the Curator LeadershipLatch recipe to do leader election at path
-
+在路径方面我们使用Curator leadershipLatch 方法去做首选
 ```
 ${druid.zk.paths.coordinatorPath}/_COORDINATOR
 ```
 
-### Segment "publishing" protocol from Historical and Realtime
+### Segment从Historical和Realtime“发布”协议
 
-The `announcementsPath` and `servedSegmentsPath` are used for this.
+`announcementsPath` 和 `servedSegmentsPath` 是为这个使用的。
 
-All [Historical](../design/historical.html) and [Realtime](../design/realtime.html) nodes publish themselves on the `announcementsPath`, specifically, they will create an ephemeral znode at
-
+所有的[Historical](../design/historical.html) 和 [Realtime](../design/realtime.html)节点在`announcementsPath`发布，特别地，它们会创建一个临时znode，在
 ```
 ${druid.zk.paths.announcementsPath}/${druid.host}
 ```
 
-Which signifies that they exist. They will also subsequently create a permanent znode at
-
+这表示它们是存在的。它们随后也将创建个永久的znode，在
 ```
 ${druid.zk.paths.servedSegmentsPath}/${druid.host}
 ```
 
-And as they load up segments, they will attach ephemeral znodes that look like
-
+当它们加载Segment时，会附加临时znode，如
 ```
 ${druid.zk.paths.servedSegmentsPath}/${druid.host}/_segment_identifier_
 ```
 
-Nodes like the [Coordinator](../design/coordinator.html) and [Broker](../design/broker.html) can then watch these paths to see which nodes are currently serving which segments.
+节点像[Coordinator](../design/coordinator.html) 和 [Broker](../design/broker.html)可以查看哪个节点是当前Segment。
+### Segment加载/停止 Coordinator and Historical之间的协议
 
-### Segment load/drop protocol between Coordinator and Historical
+`loadQueuePath` 是为这个使用的。
 
-The `loadQueuePath` is used for this.
-
-When the [Coordinator](../design/coordinator.html) decides that a [Historical](../design/historical.html) node should load or drop a segment, it writes an ephemeral znode to
-
+当 [Coordinator](../design/coordinator.html) 决定 [Historical](../design/historical.html)节点应该加载或者停止一个Segment，写一个临时znode到
 ```
 ${druid.zk.paths.loadQueuePath}/_host_of_historical_node/_segment_identifier
 ```
 
-This node will contain a payload that indicates to the historical node what it should do with the given segment. When the historical node is done with the work, it will delete the znode in order to signify to the Coordinator that it is complete.
+这个节点将包含一个负载，表明Historical节点应该怎么处理给定的Segment。
+当历史节点完成工作，为了表示协调完成，它将删除znode。

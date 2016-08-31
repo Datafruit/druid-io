@@ -1,60 +1,56 @@
 ---
 layout: doc_page
 ---
-# Aggregations
+# 聚合
 
-Aggregations can be provided at ingestion time as part of the ingestion spec as a way of summarizing data before it enters Druid. 
-Aggregations can also be specified as part of many queries at query time.
 
-Available aggregations are:
+Aggregations可以在ingestion时作为提供ingestion spec的总结数据之前进入Druid，还可以指定为查询时多查询的一部分。
 
-### Count aggregator
+有效的aggregations是：
+### 计数聚合
 
-`count` computes the count of Druid rows that match the filters.
+`count`匹配filters的Druid行数
 
 ```json
 { "type" : "count", "name" : <output_name> }
 ```
 
-Please note the count aggregator counts the number of Druid rows, which does not always reflect the number of raw events ingested. 
-This is because Druid rolls up data at ingestion time. To 
-count the number of ingested rows of data, include a count aggregator at ingestion time, and a longSum aggregator at 
-query time.
+请注意计数聚合Druid行数,这并不总是反映原始事件的数量被ingested。
+这是因为Druid在ingestion时rolls up数据。为了计算ingested行数的数据,包括在ingestion时的count aggregator,和查询时的一个longSum聚合器。
 
-### Sum aggregators
+### Sum aggregators 
 
-#### `longSum` aggregator
+#### `longSum` aggregator longSum 
 
-computes the sum of values as a 64-bit, signed integer
+计算一个64-bit,签署了integer的总值
 
 ```json
 { "type" : "longSum", "name" : <output_name>, "fieldName" : <metric_name> }
 ```
 
-`name` – output name for the summed value
-`fieldName` – name of the metric column to sum over
+`name` –  为总值输出的名称
+`fieldName` –  指定列名的和
 
-#### `doubleSum` aggregator
+#### `doubleSum` aggregator 
 
-Computes the sum of values as 64-bit floating point value. Similar to `longSum`
-
+计算64-bit floating值的和。类似 `longSum`
 ```json
 { "type" : "doubleSum", "name" : <output_name>, "fieldName" : <metric_name> }
 ```
 
-### Min / Max aggregators
+### Min / Max aggregators 
 
-#### `doubleMin` aggregator
+#### `doubleMin` aggregator 
 
-`doubleMin` computes the minimum of all metric values and Double.POSITIVE_INFINITY
+`doubleMin` 计算所有指定列值和Double.POSITIVE_INFINITY的最小值
 
 ```json
 { "type" : "doubleMin", "name" : <output_name>, "fieldName" : <metric_name> }
 ```
 
-#### `doubleMax` aggregator
+#### `doubleMax` aggregator 
 
-`doubleMax` computes the maximum of all metric values and Double.NEGATIVE_INFINITY
+`doubleMax`计算所有指定列值和Double.POSITIVE_INFINITY的最大值
 
 ```json
 { "type" : "doubleMax", "name" : <output_name>, "fieldName" : <metric_name> }
@@ -62,7 +58,7 @@ Computes the sum of values as 64-bit floating point value. Similar to `longSum`
 
 #### `longMin` aggregator
 
-`longMin` computes the minimum of all metric values and Long.MAX_VALUE
+`longMin`计算所有指定列值和Long.MAX_VALUE的最小值
 
 ```json
 { "type" : "longMin", "name" : <output_name>, "fieldName" : <metric_name> }
@@ -70,20 +66,16 @@ Computes the sum of values as 64-bit floating point value. Similar to `longSum`
 
 #### `longMax` aggregator
 
-`longMax` computes the maximum of all metric values and Long.MIN_VALUE
-
+`longMax` 计算所有指定列值和Long.MAX_VALUE的最大值
 ```json
 { "type" : "longMax", "name" : <output_name>, "fieldName" : <metric_name> }
 ```
 
 ### JavaScript aggregator
 
-Computes an arbitrary JavaScript function over a set of columns (both metrics and dimensions).
-
-All JavaScript functions must return numerical values.
-
-JavaScript aggregators are much slower than native Java aggregators and if performance is critical, you should implement 
-your functionality as a native Java aggregator.
+计算在一组列(包括metrics和dimensions)的任意JavaScript函数。
+所有javascript函数必须返回numerical values。
+JavaScript aggregators比本地Java aggregators慢得多,如果性能是至关重要的,你应该实现你的本地Java aggregator函数。
 
 ```json
 { "type": "javascript",
@@ -98,7 +90,7 @@ your functionality as a native Java aggregator.
 }
 ```
 
-**Example**
+**例子** 
 
 ```json
 {
@@ -111,17 +103,14 @@ your functionality as a native Java aggregator.
 }
 ```
 
-The javascript aggregator is recommended for rapidly prototyping features. This aggregator will be much slower in production 
-use than a native Java aggregator.
+javascript聚合器是以快速原型的特征而被推荐的。该聚合器将在生产中要比使用本地Java聚合器慢得多。
+## 近似聚合
 
-## Approximate Aggregations
+### 基数聚合器
 
-### Cardinality aggregator
 
-Computes the cardinality of a set of Druid dimensions, using HyperLogLog to estimate the cardinality. Please note that this 
-aggregator will be much slower than indexing a column with the hyperUnique aggregator. This aggregator also runs over a dimension column, which 
-means the string dimension cannot be removed from the dataset to improve rollup. In general, we strongly recommend using the hyperUnique aggregator 
-instead of the cardinality aggregator if you do not care about the individual values of a dimension.
+计算一组Druid的基数,用HyperLogLog估计基数。请注意,这个聚合器的速度将大大慢于hyperUnique聚合器的索引列。该聚合器还运行在一个维度列，
+这意味着不能从数据集中删除字符串维度而去改善汇总。一般来说,如果你不关心个人价值维度，我们强烈建议使用hyperUnique聚合器而不是基数的聚合器。
 
 ```json
 {
@@ -132,17 +121,17 @@ instead of the cardinality aggregator if you do not care about the individual va
 }
 ```
 
-#### Cardinality by value
+####  基数的价值
 
-When setting `byRow` to `false` (the default) it computes the cardinality of the set composed of the union of all dimension values for all the given dimensions.
+当byRow设置为false(默认)它是计算所有给定维度的一组所有维度值的聚合。
 
-* For a single dimension, this is equivalent to
+* 对于单维度，这相当于
 
 ```sql
 SELECT COUNT(DISTINCT(dimension)) FROM <datasource>
 ```
 
-* For multiple dimensions, this is equivalent to something akin to
+* 对于多维度，这相当类似于
 
 ```sql
 SELECT COUNT(DISTINCT(value)) FROM (
@@ -154,19 +143,17 @@ SELECT COUNT(DISTINCT(value)) FROM (
 )
 ```
 
-#### Cardinality by row
+#### Cardinality by row  
 
-When setting `byRow` to `true` it computes the cardinality by row, i.e. the cardinality of distinct dimension combinations.
-This is equivalent to something akin to
-
+当设置byRow为true时，它通过行来计算基数，即不同的维度组合的基数
 ```sql
 SELECT COUNT(*) FROM ( SELECT DIM1, DIM2, DIM3 FROM <datasource> GROUP BY DIM1, DIM2, DIM3 )
 ```
 
-**Example**
+**例子** 
 
-Determine the number of distinct countries people are living in or have come from.
 
+人们所生活或出生的地方决定国家的数量。
 ```json
 {
   "type": "cardinality",
@@ -175,8 +162,8 @@ Determine the number of distinct countries people are living in or have come fro
 }
 ```
 
-Determine the number of distinct people (i.e. combinations of first and last name).
 
+决定不同的人的数量（即姓和名的组合）。
 ```json
 {
   "type": "cardinality",
@@ -186,27 +173,26 @@ Determine the number of distinct people (i.e. combinations of first and last nam
 }
 ```
 
-### HyperUnique aggregator
+### HyperUnique聚合器
 
-Uses [HyperLogLog](http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf) to compute the estimated cardinality of a dimension that has been aggregated as a "hyperUnique" metric at indexing time.
 
+使用[HyperLogLog](http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf)来计算已经聚合在索引时作为“hyperUnique”指标的单维度的估计基数
 ```json
 { "type" : "hyperUnique", "name" : <output_name>, "fieldName" : <metric_name> }
 ```
 
-For more approximate aggregators, please see [theta sketches](../development/extensions-core/datasketches-aggregators.html).
 
-## Miscellaneous Aggregations
+更多近似聚合器，请看[theta sketches](../development/extensions-core/datasketches-aggregators.html).
+## 各种各样的聚合
 
-### Filtered Aggregator
+### 过滤聚合器
 
-A filtered aggregator wraps any given aggregator, but only aggregates the values for which the given dimension filter matches.
+过滤聚合器包装着所有给定的聚合器,但只有聚集给定维度筛选匹配的值。
+这同时可以计算被过滤和没被聚合的结果，如果没有多个查询事件那就可以用这两个结果作为聚合的一部分。
+*局限：* 过滤聚合器现在只支持'or'，'and'，'selector'， 'not' 和 'Extraction'，即匹配一个或多个维度而不是单个值。
 
-This makes it possible to compute the results of a filtered and an unfiltered aggregation simultaneously, without having to issue multiple queries, and use both results as part of post-aggregations.
+*注意:* 如果只是要过滤结果，就考虑在查询本身过滤,它将快得多,因为它不需要扫描所有的数据。
 
-*Limitations:* The filtered aggregator currently only supports 'or', 'and', 'selector', 'not' and 'Extraction' filters, i.e. matching one or multiple dimensions against a single value.
-
-*Note:* If only the filtered results are required, consider putting the filter on the query itself, which will be much faster since it does not require scanning all the data.
 
 ```json
 {

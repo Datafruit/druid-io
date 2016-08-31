@@ -2,32 +2,29 @@
 layout: doc_page
 ---
 
-# MySQL Metadata Store
+# MySQL 元数据存储
 
-Make sure to [include](../../operations/including-extensions.html) `mysql-metadata-storage` as an extension.
+请确保[包含](../../operations/including-extensions.html) `mysql-metadata-storage`作为一个扩展。
+## 安装MySQL
 
-## Setting up MySQL
+1. 安装 MySQL
 
-1. Install MySQL
+  选择你最喜欢的软件管理器安装msql，如:
+  - 在Ubuntu/Debian使用apt `apt-get install mysql-server`
+  - 在OS X，使用 [Homebrew](http://brew.sh/) `brew install mysql`
 
-  Use your favorite package manager to install mysql, e.g.:
-  - on Ubuntu/Debian using apt `apt-get install mysql-server`
-  - on OS X, using [Homebrew](http://brew.sh/) `brew install mysql`
-
-  Alternatively, download and follow installation instructions for MySQL
-  Community Server here:
+  另外,下载并按照安装说明安装MySQL
+  社区服务器在:
   [http://dev.mysql.com/downloads/mysql/](http://dev.mysql.com/downloads/mysql/)
 
-2. Create a druid database and user
+2. 创建一个druid数据库和用户
 
-  Connect to MySQL from the machine where it is installed.
-
+  从安装机器连接MySQL。
   ```bash
   > mysql -u root
   ```
 
-  Paste the following snippet into the mysql prompt:
-
+ 粘贴下面一段到mysql命令行：
   ```sql
   -- create a druid database, make sure to use utf8 as encoding
   CREATE DATABASE druid DEFAULT CHARACTER SET utf8;
@@ -36,11 +33,10 @@ Make sure to [include](../../operations/including-extensions.html) `mysql-metada
   GRANT ALL ON druid.* TO 'druid'@'localhost' IDENTIFIED BY 'diurd';
   ```
 
-3. Configure your Druid metadata storage extension:
+3. 配置你的druid元数据存储扩展：
 
-  Add the following parameters to your Druid configuration, replacing `<host>`
-  with the location (host name and port) of the database.
-
+  添加下面参数到你的Druid配置，用数据库的本地（主机名和端口）代替`<host>`。
+  
   ```properties
   druid.extensions.loadList=["mysql-metadata-storage"]
   druid.metadata.storage.type=mysql
@@ -49,7 +45,5 @@ Make sure to [include](../../operations/including-extensions.html) `mysql-metada
   druid.metadata.storage.connector.password=diurd
   ```
 
-  Note: the metadata storage extension is not packaged within the main Druid tarball; it is
-  packaged in a separate tarball that can be downloaded from [here](http://druid.io/downloads.html).
-  You can also get it using [pull-deps](../../operations/pull-deps.html), or you can build
-  it from source code; see [Build from Source](../build.html).
+  注意：元数据存储扩展并不包含在Druid软件包中；它是打包在分离的安装包里，可以从 [这里](http://druid.io/downloads.html)下载。
+  你也可以用 [pull-deps](../../operations/pull-deps.html)得到这个扩展，或者你可以从源码中构建，查阅[从资源中构建](../build.html)。

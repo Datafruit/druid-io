@@ -4,18 +4,15 @@ layout: doc_page
 TopNMetricSpec
 ==================
 
-The topN metric spec specifies how topN values should be sorted.
-
+topN指标规范指定应该如何排序topN值。
 ## Numeric TopNMetricSpec
 
-The simplest metric specification is a String value indicating the metric to sort topN results by. They are included in a topN query with:
-
+最简单的指标规范是表明topN结果按指标排序的一个字符串值。它们都包括在topN查询：
 ```json
 "metric": "<metric_name>"
 ```
 
-The metric field can also be given as a JSON object. The grammar for dimension values sorted by numeric value is shown below:
-
+指标段也可以由JSON对象给出。维度值按数值排序的语法如下：
 ```json
 "metric": {
     "type": "numeric",
@@ -23,15 +20,14 @@ The metric field can also be given as a JSON object. The grammar for dimension v
 }
 ```
 
-|property|description|required?|
+|属性|描述|要求|
 |--------|-----------|---------|
 |type|this indicates a numeric sort|yes|
 |metric|the actual metric field in which results will be sorted by|yes|
 
 ## Lexicographic TopNMetricSpec
 
-The grammar for dimension values sorted lexicographically is as follows:
-
+维度值按字母排序的语法如下：
 ```json
 "metric": {
     "type": "lexicographic",
@@ -39,16 +35,15 @@ The grammar for dimension values sorted lexicographically is as follows:
 }
 ```
 
-|property|description|required?|
+|property|description|required?|属性|描述|要求|
 |--------|-----------|---------|
 |type|this indicates a lexicographic sort|yes|
 |previousStop|the starting point of the lexicographic sort. For example, if a previousStop value is 'b', all values before 'b' are discarded. This field can be used to paginate through all the dimension values.|no|
 
 ## AlphaNumeric TopNMetricSpec
 
-Sort dimension values in alpha-numeric order, i.e treating numbers differently from other characters in sorting the values.
-The algorithm is based on [https://github.com/amjjd/java-alphanum](https://github.com/amjjd/java-alphanum).
-
+维度值按字母数字顺序排序，即把不同于其他字符排序的值的数字进行排序。
+该算法基于[https://github.com/amjjd/java-alphanum](https://github.com/amjjd/java-alphanum)。
 ```json
 "metric": {
     "type": "alphaNumeric",
@@ -56,15 +51,14 @@ The algorithm is based on [https://github.com/amjjd/java-alphanum](https://githu
 }
 ```
 
-|property|description|required?|
+|属性|描述|要求|
 |--------|-----------|---------|
 |type|this indicates an alpha-numeric sort|yes|
 |previousStop|the starting point of the alpha-numeric sort. For example, if a previousStop value is 'b', all values before 'b' are discarded. This field can be used to paginate through all the dimension values.|no|
 
 ## Inverted TopNMetricSpec
 
-Sort dimension values in inverted order, i.e inverts the order of the delegate metric spec. It can be used to sort the values in ascending order.
-
+倒序排序维度值，即颠倒的顺序代表指标规范。这可以用升序来排序维度值。
 ```json
 "metric": {
     "type": "inverted",
@@ -72,7 +66,7 @@ Sort dimension values in inverted order, i.e inverts the order of the delegate m
 }
 ```
 
-|property|description|required?|
+|属性|描述|要求|
 |--------|-----------|---------|
 |type|this indicates an inverted sort|yes|
 |metric|the delegate metric spec. |yes|

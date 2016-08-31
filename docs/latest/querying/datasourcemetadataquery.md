@@ -1,12 +1,12 @@
 ---
 layout: doc_page
 ---
-# Data Source Metadata Queries
-Data Source Metadata queries return metadata information for a dataSource.  These queries return information about:
+# 数据源的元数据查询
+数据源的元数据查询返回数据源的元数据信息。这些查询返回信息:
 
-* The timestamp of latest ingested event for the dataSource. This is the ingested event without any consideration of rollup.
+* 数据源的最新摄取事件的时间标记。这是没有任何考虑rollup的摄取事件
 
-The grammar for these queries is:
+这些查询语法为：
 
 ```json
 {
@@ -15,15 +15,14 @@ The grammar for these queries is:
 }
 ```
 
-There are 2 main parts to a Data Source Metadata query:
-
-|property|description|required?|
+主要有2部分数据源的元数据查询:
+|性能|描述|要求
 |--------|-----------|---------|
 |queryType|This String should always be "dataSourceMetadata"; this is the first thing Druid looks at to figure out how to interpret the query|yes|
 |dataSource|A String or Object defining the data source to query, very similar to a table in a relational database. See [DataSource](../querying/datasource.html) for more information.|yes|
 |context|See [Context](../querying/query-context.html)|no|
 
-The format of the result is:
+结果的格式：
 
 ```json
 [ {

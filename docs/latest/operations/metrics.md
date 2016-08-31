@@ -1,32 +1,27 @@
 ---
 layout: doc_page
 ---
-# Druid Metrics
+# Druid 指标
 
-Druid generates metrics related to queries, ingestion, and coordination.
+Druid生成与查询，摄取，协调相关的度量。
+度量在运行日志文件或通过HTTP(Apache Kafka等服务）时作为JSON对象发出。度量默认情况下是禁用的。
+所有的Druid指标公用一个常见的字段组：
+* `时间戳` - 创建指标的时间
+* `指标` - 指标名称
+* `服务` - 发出指标的服务名称
+* `主机` - 发出指标的主机名
+* `值` - 与指标相关的一些数值
 
-Metrics are emitted as JSON objects to a runtime log file or over HTTP (to a service such as Apache Kafka). Metric emission is disabled by default.
-
-All Druid metrics share a common set of fields:
-
-* `timestamp` - the time the metric was created
-* `metric` - the name of the metric
-* `service` - the service name that emitted the metric
-* `host` - the host name that emitted the metric
-* `value` - some numeric value associated with the metric
-
-Metrics may have additional dimensions beyond those listed above.
-
-Most metric values reset each emission period. By default druid emission period is 1 minute, this can be changed by setting the property `druid.monitoring.emissionPeriod`.
-
-Available Metrics
+指标可能有上面这些列表以外的维度
+大多数指标值重置每个发行时间。默认情况下Druid发行时间是1分钟，这个可以通过设置属性`druid.monitoring.emissionPeriod`来改变。
+有效的指标
 -----------------
 
-## Query Metrics
+## 查询指标
 
-### Broker
+### 代理
 
-|Metric|Description|Dimensions|Normal Value|
+|指标|描述|维度|正常值|
 |------|-----------|----------|------------|
 |`query/time`|Milliseconds taken to complete a query.|Common: dataSource, type, interval, hasFilters, duration, context, remoteAddress, id. Aggregation Queries: numMetrics, numComplexMetrics. GroupBy: numDimensions. TopN: threshold, dimension.|< 1s|
 |`query/bytes`|number of bytes returned in query response.|Common: dataSource, type, interval, hasFilters, duration, context, remoteAddress, id. Aggregation Queries: numMetrics, numComplexMetrics. GroupBy: numDimensions. TopN: threshold, dimension.| |
@@ -35,9 +30,9 @@ Available Metrics
 |`query/node/ttfb`|Time to first byte. Milliseconds elapsed until broker starts receiving the response from individual historical/realtime nodes.|id, status, server.|< 1s|
 |`query/intervalChunk/time`|Only emitted if interval chunking is enabled. Milliseconds required to query an interval chunk.|id, status, chunkInterval (if interval chunking is enabled).|< 1s|
 
-### Historical
+### 历史的
 
-|Metric|Description|Dimensions|Normal Value|
+|指标|描述|维度|正常值|
 |------|-----------|----------|------------|
 |`query/time`|Milliseconds taken to complete a query.|Common: dataSource, type, interval, hasFilters, duration, context, remoteAddress, id. Aggregation Queries: numMetrics, numComplexMetrics. GroupBy: numDimensions. TopN: threshold, dimension.|< 1s|
 |`query/segment/time`|Milliseconds taken to query individual segment. Includes time to page in the segment from disk.|id, status, segment.|several hundred milliseconds|
@@ -46,23 +41,23 @@ Available Metrics
 |`query/segmentAndCache/time`|Milliseconds taken to query individual segment or hit the cache (if it is enabled on the historical node).|id, segment.|several hundred milliseconds|
 |`query/cpu/time`|Microseconds of CPU time taken to complete a query|Common: dataSource, type, interval, hasFilters, duration, context, remoteAddress, id. Aggregation Queries: numMetrics, numComplexMetrics. GroupBy: numDimensions. TopN: threshold, dimension.|Varies|
 
-### Real-time
+### 实时
 
-|Metric|Description|Dimensions|Normal Value|
+|指标|描述|维度|正常值|
 |------|-----------|----------|------------|
 |`query/time`|Milliseconds taken to complete a query.|Common: dataSource, type, interval, hasFilters, duration, context, remoteAddress, id. Aggregation Queries: numMetrics, numComplexMetrics. GroupBy: numDimensions. TopN: threshold, dimension.|< 1s|
 |`query/wait/time`|Milliseconds spent waiting for a segment to be scanned.|id, segment.|several hundred milliseconds|
 |`segment/scan/pending`|Number of segments in queue waiting to be scanned.||Close to 0|
 
-### Cache
+### 缓存
 
-|Metric|Description|Dimensions|Normal Value|
+|指标|描述|维度|正常值|
 |------|-----------|----------|------------|
 |`query/cache/delta/*`|Cache metrics since the last emission.||N/A|
 |`query/cache/total/*`|Total cache metrics.||N/A|
 
 
-|Metric|Description|Dimensions|Normal Value|
+|指标|描述|维度|正常值|
 |------|-----------|----------|------------|
 |`*/numEntries`|Number of cache entries.||Varies.|
 |`*/sizeBytes`|Size in bytes of cache entries.||Varies.|
@@ -74,21 +69,20 @@ Available Metrics
 |`*/timeouts`|Number of cache timeouts.||0|
 |`*/errors`|Number of cache errors.||0|
 
-#### Memcached only metrics
+#### 分布式缓存唯一指标
 
-Memcached client metrics are reported as per the following. These metrics come directly from the client as opposed to from the cache retrieval layer.
-
-|Metric|Description|Dimensions|Normal Value|
+分布式缓存客户端指标按以下记录。这些指标直接来自客户端而不是缓存中检索层。
+|指标|描述|维度|正常值|
 |------|-----------|----------|------------|
 |`query/cache/memcached/total`|Cache metrics unique to memcached (only if `druid.cache.type=memcached`) as their actual values|Variable|N/A|
 |`query/cache/memcached/delta`|Cache metrics unique to memcached (only if `druid.cache.type=memcached`) as their delta from the prior event emission|Variable|N/A|
 
 
-## Ingestion Metrics
+## 摄取指标
 
-These metrics are only available if the RealtimeMetricsMonitor is included in the monitors list for the Realtime node. These metrics are deltas for each emission period.
+这些指标只有实时指标监听包含在监听列表中时有效。这些指标为每个发行期间delta。
 
-|Metric|Description|Dimensions|Normal Value|
+|指标|描述|维度|正常值|
 |------|-----------|----------|------------|
 |`ingest/events/thrownAway`|Number of events rejected because they are outside the windowPeriod.|dataSource.|0|
 |`ingest/events/unparseable`|Number of events rejected because the events are unparseable.|dataSource.|0|
@@ -103,23 +97,22 @@ These metrics are only available if the RealtimeMetricsMonitor is included in th
 |`ingest/merge/time`|Milliseconds spent merging intermediate segments|dataSource.|Depends on configuration. Generally a few minutes at most.|
 |`ingest/merge/cpu`|Cpu time in Nanoseconds spent on merging intermediate segments.|dataSource.|Depends on configuration. Generally a few minutes at most.|
 |`ingest/handoff/count`|Number of handoffs that happened.|dataSource.|Varies. Generally greater than 0 once every segment granular period if cluster operating normally|
+ 
+注意：如果JVM不支持当前线程的CPU时间测量，摄取/合并/cpu和摄取/坚持/cpu 将为 0。
+### 索引服务
 
-Note: If the JVM does not support CPU time measurement for the current thread, ingest/merge/cpu and ingest/persists/cpu will be 0. 
-
-### Indexing Service
-
-|Metric|Description|Dimensions|Normal Value|
+|指标|描述|维度|正常值|
 |------|-----------|----------|------------|
 |`task/run/time`|Milliseconds taken to run task.|dataSource, taskType, taskStatus.|Varies.|
 |`segment/added/bytes`|Size in bytes of new segments created.|dataSource, taskType, interval.|Varies.|
 |`segment/moved/bytes`|Size in bytes of segments moved/archived via the Move Task.|dataSource, taskType, interval.|Varies.|
 |`segment/nuked/bytes`|Size in bytes of segments deleted via the Kill Task.|dataSource, taskType, interval.|Varies.|
 
-## Coordination
+## 协调
 
-These metrics are for the Druid coordinator and are reset each time the coordinator runs the coordination logic.
+这些指标是为了Druid协调器和能重置每次运行协调逻辑的协调器。
 
-|Metric|Description|Dimensions|Normal Value|
+|指标|描述|维度|正常值|
 |------|-----------|----------|------------|
 |`segment/assigned/count`|Number of segments assigned to be loaded in the cluster.|tier.|Varies.|
 |`segment/moved/count`|Number of segments moved in the cluster.|tier.|Varies.|
@@ -137,11 +130,11 @@ These metrics are for the Druid coordinator and are reset each time the coordina
 |`segment/count`|Number of available segments.|dataSource.|< max|
 |`segment/overShadowed/count`|Number of overShadowed segments.||Varies.|
 
-## General Health
+## 一般正常
 
-### Historical
+### 历史的
 
-|Metric|Description|Dimensions|Normal Value|
+|指标|描述|维度|正常值|
 |------|-----------|----------|------------|
 |`segment/max`|Maximum byte limit available for segments.||Varies.|
 |`segment/used`|Bytes used for served segments.|dataSource, tier, priority.|< max|
@@ -150,9 +143,9 @@ These metrics are for the Druid coordinator and are reset each time the coordina
 
 ### JVM
 
-These metrics are only available if the JVMMonitor module is included.
+这些指标只有当JVMMonitor 模块包含在内时才有效。
 
-|Metric|Description|Dimensions|Normal Value|
+|指标|描述|维度|正常值|
 |------|-----------|----------|------------|
 |`jvm/pool/committed`|Committed pool.|poolKind, poolName.|close to max pool|
 |`jvm/pool/init`|Initial pool.|poolKind, poolName.|Varies.|
@@ -170,18 +163,18 @@ These metrics are only available if the JVMMonitor module is included.
 
 ### EventReceiverFirehose
 
-The following metric is only available if the EventReceiverFirehoseMonitor module is included.
+下面的指标只有当EventReceiverFirehoseMonitor 模块包含在内时才有效。
 
-|Metric|Description|Dimensions|Normal Value|
+|指标|描述|维度|正常值|
 |------|-----------|----------|------------|
 |`ingest/events/buffered`|Number of events queued in the EventReceiverFirehose's buffer|serviceName, dataSource, taskId, bufferCapacity.|Equal to current # of events in the buffer queue.|
 |`ingest/bytes/received`|Number of bytes received by the EventReceiverFirehose.|serviceName, dataSource, taskId.|Varies.|
 
 ## Sys
 
-These metrics are only available if the SysMonitor module is included.
+这些指标只有当SysMonitor模块包括在内时才有效。
 
-|Metric|Description|Dimensions|Normal Value|
+|指标|描述|维度|正常值|
 |------|-----------|----------|------------|
 |`sys/swap/free`|Free swap.||Varies.|
 |`sys/swap/max`|Max swap.||Varies.|

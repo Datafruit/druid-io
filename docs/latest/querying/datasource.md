@@ -2,12 +2,12 @@
 layout: doc_page
 ---
 
-## Datasources
+## 数据源
 
-A data source is the Druid equivalent of a database table. However, a query can also masquerade as a data source, providing subquery-like functionality. Query data sources are currently supported only by [GroupBy](../querying/groupbyquery.html) queries.
+一个数据源相当于Druid数据库中的表。然而，一个查询也可以伪装成一个数据源,提供subquery-like功能。目前查询数据源支持只有[GroupBy](../querying/groupbyquery.html)查询。
+### 表数据源
 
-### Table Data Source
-The table data source is the most common type. It's represented by a string, or by the full structure:
+表数据源是最常用的一种类型。它可以通过一个字符串,或完整的结构来表示:
 
 ```json
 {
@@ -16,10 +16,9 @@ The table data source is the most common type. It's represented by a string, or 
 }
 ```
 
-### Union Data Source
+### 数据源联合
 
-This data source unions two or more table data sources.
-
+数据源联合就是两个或者更多表数据源。
 ```json
 {
        "type": "union",
@@ -27,13 +26,13 @@ This data source unions two or more table data sources.
 }
 ```
 
-Note that the data sources being unioned should have the same schema.
-Union Queries should be always sent to the broker/router node and are *NOT* supported directly by the historical nodes. 
 
-### Query Data Source
+注意,数据源联合应该有相同的模式。
+联合查询应该都是发送到代理/路由器节点和*不*支持直接通过历史节点。
 
-This is used for nested groupBys and is only currently supported for groupBys.
+### 查询数据源
 
+查询数据源用于嵌套的groupBys而且现在只有groupBys支持。
 ```json
 {
 	"type": "query",

@@ -1,9 +1,8 @@
 ---
 layout: doc_page
 ---
-# Select Queries
-Select queries return raw Druid rows and support pagination.
-
+# 选择查询
+选择查询返回未加工的Druid行和支持分页。
 ```json
  {
    "queryType": "select",
@@ -19,9 +18,8 @@ Select queries return raw Druid rows and support pagination.
  }
 ```
 
-There are several main parts to a select query:
-
-|property|description|required?|
+这是选择查询的几种主要部分：
+|属性|描述|要求|
 |--------|-----------|---------|
 |queryType|This String should always be "select"; this is the first thing Druid looks at to figure out how to interpret the query|yes|
 |dataSource|A String or Object defining the data source to query, very similar to a table in a relational database. See [DataSource](../querying/datasource.html) for more information.|yes|
@@ -33,8 +31,7 @@ There are several main parts to a select query:
 |pagingSpec|A JSON object indicating offsets into different scanned segments. Query results will return a `pagingIdentifiers` value that can be reused in the next query for pagination.|yes|
 |context|An additional JSON Object which can be used to specify certain flags.|no|
 
-The format of the result is:
-
+结果的格式是：
 ```json
  [{
   "timestamp" : "2013-01-01T00:00:00.000Z",
@@ -141,18 +138,16 @@ The format of the result is:
   }
 } ]
 ```
+`threshold`决定返回多少点击，每个点击被一个偏移创建索引。当`descending`是true时，偏移量将是负值。
 
-The `threshold` determines how many hits are returned, with each hit indexed by an offset. When `descending` is true, the offset will be negative value.
-
-The results above include:
-
+上面的结果包括：
 ```json 
     "pagingIdentifiers" : {
       "wikipedia_2012-12-29T00:00:00.000Z_2013-01-10T08:00:00.000Z_2013-01-10T08:13:47.830Z_v9" : 4
     },
 ```
 
-This can be used with the next query's pagingSpec:
+这个可以使用下个查询的pagingSpec:
 
 ```json
  {

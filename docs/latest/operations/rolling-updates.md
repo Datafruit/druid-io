@@ -2,79 +2,62 @@
 layout: doc_page
 ---
 
-Rolling Updates
-===============
+滚动更新
+====================
 
-For rolling Druid cluster updates with no downtime, we recommend updating Druid nodes in the
-following order:
+滚动Druid集群更新没有停息时间,我们建议更新中的Druid节点，按照以下顺序：
+1. 历史的
+2. Overlord (如果有的话)
+3. 中间管理层(如果有的话)
+4. 独立的实时 (如果有的话)
+5. 代理
+6. 协调器
 
-1. Historical
-2. Overlord (if any)
-3. Middle Manager (if any)
-4. Standalone Real-time (if any)
-5. Broker
-6. Coordinator
+## 历史的
 
-## Historical
-
-Historical nodes can be updated one at a time. Each Historical node has a startup time to memory map
-all the segments it was serving before the update. The startup time typically takes a few seconds to
-a few minutes, depending on the hardware of the node. As long as each Historical node is updated
-with a sufficient delay (greater than the time required to start a single node), you can rolling
-update the entire Historical cluster.
+历史节点每次可以更新一个。每个历史节点内存映射所有的段在更新前启动服务。
+启动时间通常需要几秒钟几分钟,这取决于节点的硬件。
+只要每个历史节点更新足够的延迟(大于开始一个节点所需的时间),你可以滚动更新整个历史集群。
 
 ## Overlord
 
-Overlord nodes can be updated one at a time in a rolling fashion.
+Overlord节点可以在滚动时更新。
+## 中间管理层
 
-## Middle Managers
+中层管理层运行批处理和实时索引任务。通常你以这样一种方式更新中间管理层,那么实时索引任务不会失败。有三个策略可以这样做。
 
-Middle Managers run both batch and real-time indexing tasks. Generally you want to update Middle
-Managers in such a way that real-time indexing tasks do not fail. There are three strategies for
-doing that.
+### 滚动重启（基于还原）
 
-### Rolling restart (restore-based)
+当你设置`druid.indexer.task.restoreTasksOnRestart = true`时，中层管理人员可以以滚动的方式更新。
+在这种情况下,索引任务支持恢复，将在中层管理层重启恢复他们的状态,而且不会失败。
 
-Middle Managers can be updated one at a time in a rolling fashion when you set
-`druid.indexer.task.restoreTasksOnRestart=true`. In this case, indexing tasks that support restoring
-will restore their state on Middle Manager restart, and will not fail.
+目前,只有实时任务支持恢复,非实时索引任务将会失败并且需要重新提交。
 
-Currently, only realtime tasks support restoring, so non-realtime indexing tasks will fail and will
-need to be resubmitted.
+### 滚动重启（基于很好的终止）
 
-### Rolling restart (graceful-termination-based)
+中层管理层可以很好地终止使用“禁用”API。这适用于所有的任务类型,即使任务不恢复原状。
 
-Middle Managers can be gracefully terminated using the "disable" API. This works for all task types,
-even tasks that are not restorable.
+为了准备更新中间管理层,发送一个POST请求到`<MiddleManager_IP:PORT>/druid/worker/v1/disable`。
+Overlord现在将不再发送任务到这个中间管理层。任务已经开始将运行完成。
 
-To prepare a Middle Manager for update, send a POST request to
-`<MiddleManager_IP:PORT>/druid/worker/v1/disable`. The Overlord will now no longer send tasks to
-this Middle Manager. Tasks that have already started will run to completion.
+查看现在所有的任务，发送一个GET请求到 `<MiddleManager_IP:PORT>/druid/worker/v1/tasks`。
+当这个列表是空的时候，你可以安全地更新到中间管理层。中间管理层开始备份后，它可以能够再次自动启动。你也可以通过POSTing到启动中间管理者 `<MiddleManager_IP:PORT>/druid/worker/v1/enable`。
 
-To view all existing tasks, send a GET request to `<MiddleManager_IP:PORT>/druid/worker/v1/tasks`.
-When this list is empty, you can safely update the Middle Manager. After the Middle Manager starts
-back up, it is automatically enabled again. You can also manually enable Middle Managers by POSTing
-to `<MiddleManager_IP:PORT>/druid/worker/v1/enable`.
+### 基于自动缩放替换
 
-### Autoscaling-based replacement
+如果你的Overlord启用了自动缩放,Overlord节点可以推出大量的新中间管理层节点,然后优雅地终止旧的任务完成。
+这个过程是通过设置`druid.indexer.runner.minWorkerVersion = # { VERSION }`配置。
+每次你更新你的Overlord节点,应该增加`版本`值,这将引发大规模推出新的中间管理层。
 
-If autoscaling is enabled on your Overlord, then Overlord nodes can launch new Middle Manager nodes
-en masse and then gracefully terminate old ones as their tasks finish. This process is configured by
-setting `druid.indexer.runner.minWorkerVersion=#{VERSION}`. Each time you update your overlord node,
-the `VERSION` value should be increased, which will trigger a mass launch of new Middle Managers.
+`druid.indexer.autoscale.workerVersion=#{VERSION}`配置也需要设置。
 
-The config `druid.indexer.autoscale.workerVersion=#{VERSION}` also needs to be set.
+## 独立的实时
 
-## Standalone Real-time
+独立的实时节点可以在滚动时更新。
+## 代理
 
-Standalone real-time nodes can be updated one at a time in a rolling fashion.
+代理节点可以滚动的方式更新一次。更新每个节点之间需要一些延迟，作为代理必须在返回有效结果之前加载整个集群的状态。
 
-## Broker
+## 协调器
 
-Broker nodes can be updated one at a time in a rolling fashion. There needs to be some delay between
-updating each node as brokers must load the entire state of the cluster before they return valid
-results.
-
-## Coordinator
-
-Coordinator nodes can be updated one at a time in a rolling fashion.
+协调器节点可以滚动的方式更新一次。

@@ -2,13 +2,11 @@
 layout: doc_page
 ---
 # Refining Search Queries
-Search query specs define how a "match" is defined between a search value and a dimension value. The available search query specs are:
-
+search query spec定义一个搜索值和维度值之间怎样“匹配”。可用的search query spec有：
 InsensitiveContainsSearchQuerySpec
 ----------------------------------
 
-If any part of a dimension value contains the value specified in this search query spec, regardless of case, a "match" occurs. The grammar is:
-
+如果所有维度值包含指定在这个search query spec的值，忽视这种情况，会出现“匹配”。语法如下：
 ```json
 {
   "type"  : "insensitive_contains",
@@ -19,8 +17,7 @@ If any part of a dimension value contains the value specified in this search que
 FragmentSearchQuerySpec
 -----------------------
 
-If any part of a dimension value contains all of the values specified in this search query spec, regardless of case by default, a "match" occurs. The grammar is:
-
+如果所有维度值包含所有指定在这个search query spec的值，默认这种情况，出现“匹配”。语法如下：
 ```json
 { 
   "type" : "fragment",
@@ -32,8 +29,7 @@ If any part of a dimension value contains all of the values specified in this se
 ContainsSearchQuerySpec
 ----------------------------------
 
-If any part of a dimension value contains the value specified in this search query spec, a "match" occurs. The grammar is:
-
+如果所有的维度值包含指定在这个search query spec的值，出现“匹配”。语法如下：
 ```json
 {
   "type"  : "contains",
@@ -45,8 +41,7 @@ If any part of a dimension value contains the value specified in this search que
 RegexSearchQuerySpec
 ----------------------------------
 
-If any part of a dimension value contains the pattern specified in this search query spec, a "match" occurs. The grammar is:
-
+如果所有的维度值包含指定在这个search query spec的模式，出现“匹配”。语法如下：
 ```json
 {
   "type"  : "regex",

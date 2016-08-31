@@ -1,22 +1,19 @@
 ---
 layout: doc_page
 ---
-# Tasks
-Tasks are run on middle managers and always operate on a single data source. Tasks are submitted using [POST requests](../design/indexing-service.html).
+# 任务
+任务运行在中层管理者而且总是运行在单一数据源中。任务提交使用[POST请求](../design/indexing-service.html)。
 
-There are several different types of tasks.
-
-Segment Creation Tasks
+这里有几种不同的任务类型。
+段创建任务
 ----------------------
 
-### Hadoop Index Task
+### 索引任务
 
-See [batch ingestion](../ingestion/batch-ingestion.html).
+查阅[批摄取](../ingestion/batch-ingestion.html)。
+### 索引任务
 
-### Index Task
-
-The Index Task is a simpler variation of the Index Hadoop task that is designed to be used for smaller data sets. The task executes within the indexing service and does not require an external Hadoop setup to use. The grammar of the index task is as follows:
-
+索引任务是索引Hadoop任务更简单的变异,被设计用于较小的数据集。索引服务内执行任务,不需要外部Hadoop设置。索引任务的语法如下:
 ```json
 {
   "type" : "index",
@@ -84,9 +81,9 @@ The Index Task is a simpler variation of the Index Hadoop task that is designed 
 }
 ```
 
-#### Task Properties
+#### 任务属性
 
-|property|description|required?|
+|属性|描述|必须?|
 |--------|-----------|---------|
 |type|The task type, this should always be "index".|yes|
 |id|The task ID. If this is not explicitly specified, Druid generates the task ID using the name of the task file and date-time stamp. |no|
@@ -94,19 +91,15 @@ The Index Task is a simpler variation of the Index Hadoop task that is designed 
 
 #### DataSchema
 
-This field is required.
-
-See [Ingestion](../ingestion/index.html)
-
+这个字段是要求的。
+查阅[摄取](../ingestion/index.html)
 #### IOConfig
 
-This field is required. You can specify a type of [Firehose](../ingestion/firehose.html) here.
+这个字段是必须的，你可以在这里指定一种[Firehose](../ingestion/firehose.html)类型。
+#### 优化配置
 
-#### TuningConfig
-
-The tuningConfig is optional and default parameters will be used if no tuningConfig is specified. See below for more details.
-
-|property|description|default|required?|
+优化配置是可选的,如果没有指定tuningConfig将使用缺省参数。见下文的更多细节。
+|属性|描述|默认|必须?|
 |--------|-----------|-------|---------|
 |type|The task type, this should always be "index".|None.|yes|
 |targetPartitionSize|Used in sharding. Determines how many rows are in each segment. Set this to -1 to use numShards instead for sharding.|5000000|no|
@@ -114,26 +107,23 @@ The tuningConfig is optional and default parameters will be used if no tuningCon
 |numShards|Directly specify the number of shards to create. You can skip the intermediate persist step if you specify the number of shards you want and set targetPartitionSize=-1.|null|no|
 |indexSpec|defines segment storage format options to be used at indexing time, see [IndexSpec](#indexspec)|null|no|
 
-#### IndexSpec
+#### 索引规范
 
-The indexSpec defines segment storage format options to be used at indexing
-time, such as bitmap type, and column compression formats.
+索引规范在索引时定义了段存储格式选项，如位图类型和列压缩格式。
 
-The indexSpec is optional and default parameters will be used if not specified.
-
-|property|description|possible values|default|required?|
+索引规范是可选的,如果没有指定将使用缺省参数。
+|属性|描述|可能的值|默认值|必须?|
 |--------|-----------|---------------|-------|---------|
 |bitmap|type of bitmap compression to use for inverted indices.|`"concise"`, `"roaring"`|`"concise"`|no|
 |dimensionCompression|compression format for dimension columns|`"uncompressed"`, `"lz4"`, `"lzf"`|`"lz4"`|no|
 |metricCompression|compression format for metric columns, defaults to LZ4|`"lz4"`, `"lzf"`|`"lz4"`|no|
 
-Segment Merging Tasks
----------------------
+段合并任务
+--------------------------
 
-### Append Task
-
-Append tasks append a list of segments together into a single segment (one after the other). The grammar is:
-
+### 追加任务
+ 
+追加任务和一列段到一个单段（一个接着一个）。语法如下：
 ```json
 {
     "type": "append",
@@ -144,10 +134,9 @@ Append tasks append a list of segments together into a single segment (one after
 }
 ```
 
-### Merge Task
-
-Merge tasks merge a list of segments together. Any common timestamps are merged. The grammar is:
-
+### 合并任务
+ 
+合并任务和一列段。任何常见的时间戳都是可以合并的。语法如下：
 ```json
 {
     "type": "merge",
@@ -158,13 +147,12 @@ Merge tasks merge a list of segments together. Any common timestamps are merged.
 }
 ```
 
-Segment Destroying Tasks
-------------------------
+ 段破坏任务
+------
 
-### Kill Task
+### 强制关闭任务
 
-Kill tasks delete all information about a segment and removes it from deep storage. Killable segments must be disabled (used==0) in the Druid segment table. The available grammar is:
-
+强制关闭任务从深存储删除段的所有信息和删除该任务。在Druid 段表中必须禁用Killable段(used==0)。有效的语法是:
 ```json
 {
     "type": "kill",
@@ -173,18 +161,17 @@ Kill tasks delete all information about a segment and removes it from deep stora
     "interval" : <all_segments_in_this_interval_will_die!>
 }
 ```
+ 
+混合任务
+----
 
-Misc. Tasks
------------
+### 版本转换任务
+任务转换套件需要活动段和将使用新的索引规范从而不压缩他们。这是非常方便的操作,比如从简洁迁移到复杂时,或添加维度压缩旧段。
+新段将有相同版本的旧段`_converted`附加。转换任务对于多次相同的数据源可能运行在不同的时间间隔。
+每个执行将添加另一个“_converted”部分的版本。
+有两种类型转换任务。一个是Hadoop转换任务,另一个是索引服务转换任务。Hadoop转换任务运行在一个Hadoop集群,只是留下一个任务监控到索引服务(类似于hadoop批处理任务)。索引服务转换任务是在索引服务运行实际的转换。
 
-### Version Converter Task
-The convert task suite takes active segments and will recompress them using a new IndexSpec. This is handy when doing activities like migrating from Concise to Roaring, or adding dimension compression to old segments.
-
-Upon success the new segments will have the same version as the old segment with `_converted` appended. A convert task may be run against the same interval for the same datasource multiple times. Each execution will append another `_converted` to the version for the segments
-
-There are two types of conversion tasks. One is the Hadoop convert task, and the other is the indexing service convert task. The Hadoop convert task runs on a hadoop cluster, and simply leaves a task monitor on the indexing service (similar to the hadoop batch task). The indexing service convert task runs the actual conversion on the indexing service.
-
-#### Hadoop Convert Segment Task
+#### 转换段任务
 ```json
 {
   "type": "hadoop_convert_segment",
@@ -199,9 +186,9 @@ There are two types of conversion tasks. One is the Hadoop convert task, and the
 }
 ```
 
-The values are described below.
+这些值描述如下。
 
-|Field|Type|Description|Required|
+|属性|类型|描述|必须?|
 |-----|----|-----------|--------|
 |`type`|String|Convert task identifier|Yes: `hadoop_convert_segment`|
 |`dataSource`|String|The datasource to search for segments|Yes|
@@ -214,7 +201,7 @@ The values are described below.
 |`segmentOutputPath`|URI|A base uri for the segment to be placed. Same format as other places a segment output path is needed|Yes|
 
 
-#### Indexing Service Convert Segment Task
+#### 索引服务转换段任务
 ```json
 {
   "type": "convert_segment",
@@ -225,8 +212,7 @@ The values are described below.
   "validate": false
 }
 ```
-
-|Field|Type|Description|Required (default)|
+|字段|类型|描述|必须（默认）|
 |-----|----|-----------|--------|
 |`type`|String|Convert task identifier|Yes: `convert_segment`|
 |`dataSource`|String|The datasource to search for segments|Yes|
@@ -235,11 +221,10 @@ The values are described below.
 |`force`|boolean|Forces the convert task to continue even if binary versions indicate it has been updated recently (you probably want to do this)|No (false)|
 |`validate`|boolean|Runs validation between the old and new segment before reporting task success|No (true)|
 
-Unlike the hadoop convert task, the indexing service task draws its output path from the indexing service's configuration.
+跟hadoop转换任务不一样,索引服务的任务会从索引服务的配置绘制它的输出路径。
+### 等待任务
 
-### Noop Task
-
-These tasks start, sleep for a time and are used only for testing. The available grammar is:
+这些任务开始，只会在测试时被使用。语法如下：
 
 ```json
 {
@@ -251,10 +236,10 @@ These tasks start, sleep for a time and are used only for testing. The available
 }
 ```
 
-Locking
--------
+锁定
+---------
 
-Once an overlord node accepts a task, a lock is created for the data source and interval specified in the task. 
-Tasks do not need to explicitly release locks, they are released upon task completion. Tasks may potentially release 
-locks early if they desire. Tasks ids are unique by naming them using UUIDs or the timestamp in which the task was created. 
-Tasks are also part of a "task group", which is a set of tasks that can share interval locks.
+一旦一个霸王节点接受一项任务,在任务中数据源创建一个锁和区间指定。
+任务不需要显式地释放锁,他们在任务完成时被释放。如果他们期望则任务可以早些释放锁。
+任务id是惟一的命名，使用uuid或任务被创建的时间戳。
+任务也“工作组”的一部分,这是一组任务,这些任务可以共享间隔锁。

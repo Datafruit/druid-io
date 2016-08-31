@@ -1,7 +1,8 @@
 ---
 layout: doc_page
 ---
-# SQL Support for Druid
-Full SQL is currently not supported with Druid. SQL libraries on top of Druid have been contributed by the community and can be found on our [libraries](../development/libraries.html) page.
+# Druid支持SQL
 
-The community SQL libraries are not yet as expressive as Druid's native query language. 
+Druid现在不支持完整的SQL。Druid顶部的SQl库是由社区贡献的，可以在我们的[库](../development/libraries.html)页面查找。
+
+社区SQL库还没有像Druid的原生查询语言表达一样。

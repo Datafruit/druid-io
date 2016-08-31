@@ -2,33 +2,36 @@
 layout: doc_page
 ---
 
-# Performance FAQ
+# 性能常见的问题
 
-## I can't match your benchmarked results
+## 我不能匹配你的基准测试结果
 
-Improper configuration is by far the largest problem we see people trying to deploy Druid. The example configurations listed in the tutorials are designed for a small volume of data where all nodes are on a single machine. The configs are extremely poor for actual production use.
+配置不当是迄今为止最大的问题,我们看到人们尝试部署Druid。教程中罗列的示例配置是专为单机上节点所在是一个小的数据。这个配置极少应用于生产中。
 
-## What should I set my JVM heap?
+## 我应该怎么设置我的JVM堆？
 
-The size of the JVM heap really depends on the type of Druid node you are running. Below are a few considerations.
+JVM堆的大小取决于你运行Druid的类型节点。下面是一些注意事项。
+[代理节点](../design/broker.html)使用JVM堆主要从历史和实时合并结果。代理也使用堆内存和处理线程groupBy查询。我们建议20G-30G的堆。
 
-[Broker nodes](../design/broker.html) uses the JVM heap mainly to merge results from historicals and real-times. Brokers also use off-heap memory and processing threads for groupBy queries. We recommend 20G-30G of heap here.
+[Historical nodes](../design/historical.html)使用堆内存来存储中间结果,默认情况下,所有部分都是内存映射才可以查询。
+通常,更多的内存可用历史的节点上,可以服务更多的部分没有数据分页到磁盘上的可能性。
+在历史上,JVM堆用于[分组查询](../querying/groupbyquery.html),用于中间计算一些数据结构,和一般处理。
+一种计算段有多少空间方法是： memory_for_segments = total_memory - heap - direct_memory - jvm_overhead。
+注意total_memory这里指cgroup的可用内存(如果运行在Linux上),这为默认情况下是所有的系统内存。
 
-[Historical nodes](../design/historical.html) use off-heap memory to store intermediate results, and by default, all segments are memory mapped before they can be queried. Typically, the more memory is available on a historical node, the more segments can be served without the possibility of data being paged on to disk. On historicals, the JVM heap is used for [GroupBy queries](../querying/groupbyquery.html), some data structures used for intermediate computation, and general processing. One way to calculate how much space there is for segments is: memory_for_segments = total_memory - heap - direct_memory - jvm_overhead. Note that total_memory here refers to the memory available to the cgroup (if running on Linux), which for default cases is going to be all the system memory.
+我们建议为堆使用250mb*(processing.numThreads)。
+[协调](../design/coordinator.html)不需要堆内存，堆用于加载所有段的信息来确定哪些段需要加载,下降,移动或复制。
+## 中间计算缓冲区是什么？
 
-We recommend 250mb * (processing.numThreads) for the heap.
+中间计算缓冲区指定存储中间结果的缓冲区大小。历史和实时节点的计算引擎将使用一个这个尺寸的缓冲区做他们所有的中间计算堆。
+更大的值允许更多聚合在一个经过数据而较小值可能需要更多的通过根据所执行的查询。默认大小是1073741824bytes(1GB)。
 
-[Coordinator nodes](../design/coordinator.html) do not require off-heap memory and the heap is used for loading information about all segments to determine what segments need to be loaded, dropped, moved, or replicated.
+## 服务器最大的尺寸是多少？
+服务器最大容量设置最大累积段大小(以字节为单位),可以容纳一个节点。通过在一个节点上控制内存/磁盘比率改变这个参数会影响性能。
+设置该参数值大于总内存容量节点和可能导致磁盘上的分页。这个分页时间引入了一个查询延迟时间。
 
-## What is the intermediate computation buffer?
-The intermediate computation buffer specifies a buffer size for the storage of intermediate results. The computation engine in both the Historical and Realtime nodes will use a scratch buffer of this size to do all of their intermediate computations off-heap. Larger values allow for more aggregations in a single pass over the data while smaller values can require more passes depending on the query that is being executed. The default size is 1073741824 bytes (1GB).
-
-## What is server maxSize?
-Server maxSize sets the maximum cumulative segment size (in bytes) that a node can hold. Changing this parameter will affect performance by controlling the memory/disk ratio on a node. Setting this parameter to a value greater than the total memory capacity on a node and may cause disk paging to occur. This paging time introduces a query latency delay.
-
-## My logs are really chatty, can I set them to asynchronously write?
-Yes, using a `log4j2.xml` similar to the following causes some of the more chatty classes to write asynchronously:
-
+## 我的日志真的很健谈,我能让他们异步写？
+是的,使用 `log4j2.xml` 类似于以下异步写一些更健谈的类:
 ```
 <?xml version="1.0" encoding="UTF-8" ?>
 <Configuration status="WARN">

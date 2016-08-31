@@ -2,15 +2,13 @@
 layout: doc_page
 ---
 
-# Batch Data Ingestion
+# 批数据摄取
 
-Druid can load data from static files through a variety of methods described here.
+Druid可以通过下面描述的各种方法从静态文件加载数据。
 
-## Hadoop-based Batch Ingestion
+## 基于Hadoop的批摄取
 
-Hadoop-based batch ingestion in Druid is supported via a Hadoop-ingestion task. These tasks can be posted to a running instance  
-of a Druid [overlord](../design/indexing-service.html). A sample task is shown below:
-
+在Druid基于Hadoop批量摄取是通过一个Hadoop摄取任务支持的。这些任务可以发布到运行在Druid的实例 [overlord](../design/indexing-service.html)。一个简单的示例如下：
 ```json
 {
   "type" : "index_hadoop",
@@ -75,7 +73,7 @@ of a Druid [overlord](../design/indexing-service.html). A sample task is shown b
 }
 ```
 
-|property|description|required?|
+|属性|描述|要求？|
 |--------|-----------|---------|
 |type|The task type, this should always be "index_hadoop".|yes|
 |spec|A Hadoop Index Spec. See [Batch Ingestion](../ingestion/batch-ingestion.html)|yes|
@@ -84,15 +82,15 @@ of a Druid [overlord](../design/indexing-service.html). A sample task is shown b
 
 ### DataSchema
 
-This field is required.
+这个字段是必须的。
 
-See [Ingestion](../ingestion/index.html)
+查阅 [Ingestion](../ingestion/index.html)
 
 ### IOConfig
 
-This field is required.
+这个字段是必须的。
 
-|Field|Type|Description|Required|
+|字段|类型|描述|要求|
 |-----|----|-----------|--------|
 |type|String|This should always be 'hadoop'.|yes|
 |inputSpec|Object|a specification of where to pull the data in from. See below.|yes|
@@ -101,35 +99,32 @@ This field is required.
 
 #### InputSpec specification
 
-There are multiple types of inputSpecs:
-
+有多个inputSpecs类型：
 ##### `static`
 
-Is a type of inputSpec where a static path to where the data files are located is passed.
+数据文件所在的静态路径是一种inputSpec类型。
 
-|Field|Type|Description|Required|
+|字段|类型|描述|要求|
 |-----|----|-----------|--------|
 |paths|Array of String|A String of input paths indicating where the raw data is located.|yes|
 
-For example, using the static input paths:
-
+例如，使用静态输入路径：
 ```
 "paths" : "s3n://billy-bucket/the/data/is/here/data.gz, s3n://billy-bucket/the/data/is/here/moredata.gz, s3n://billy-bucket/the/data/is/here/evenmoredata.gz"
 ```
 
 ##### `granularity`
 
-Is a type of inputSpec that expects data to be laid out in a specific path format. Specifically, it expects it to be segregated by day in this directory format `y=XXXX/m=XX/d=XX/H=XX/M=XX/S=XX` (dates are represented by lowercase, time is represented by uppercase).
+指定路径格式的预期数据是一种inputSpec类型。特别地，它预期日期将会使用这个目录形式`y=XXXX/m=XX/d=XX/H=XX/M=XX/S=XX`（日期是由小写字母表示，时间是大写字母表示）。
 
-|Field|Type|Description|Required|
+|字段|类型|描述|要求|
 |-----|----|-----------|--------|
 |dataGranularity|String|specifies the granularity to expect the data at, e.g. hour means to expect directories `y=XXXX/m=XX/d=XX/H=XX`.|yes|
 |inputPath|String|Base path to append the expected time path to.|yes|
 |filePattern|String|Pattern that files should match to be included.|yes|
 |pathFormat|String|Joda date-time format for each directory. Default value is `"'y'=yyyy/'m'=MM/'d'=dd/'H'=HH"`, or see [Joda documentation](http://www.joda.org/joda-time/apidocs/org/joda/time/format/DateTimeFormat.html)|no|
 
-For example, if the sample config were run with the interval 2012-06-01/2012-06-02, it would expect data at the paths
-
+例如，如果简单的配置2012-06-01/2012-06-02期间运行，它将在路径下expect数据
 ```
 s3n://billy-bucket/the/data/is/here/y=2012/m=06/d=01/H=00
 s3n://billy-bucket/the/data/is/here/y=2012/m=06/d=01/H=01
@@ -139,17 +134,16 @@ s3n://billy-bucket/the/data/is/here/y=2012/m=06/d=01/H=23
 
 ##### `dataSource`
 
-Read Druid segments. See [here](../ingestion/update-existing-data.html) for more information.
+读取Druid segments。查阅[这里](../ingestion/update-existing-data.html)了解更多信息。
 
 ##### `multi`
 
-Read multiple sources of data. See [here](../ingestion/update-existing-data.html) for more information.
-
+读多个数据源。查阅[这里](../ingestion/update-existing-data.html)了解更多信息。
 ### TuningConfig
 
-The tuningConfig is optional and default parameters will be used if no tuningConfig is specified.
+tuningConfig是可选的，而且如果没有指定的tuningConfig将使用默认参数。
 
-|Field|Type|Description|Required|
+|字段|类型|描述|要求|
 |-----|----|-----------|--------|
 |workingPath|String|The working path to use for intermediate results (results between Hadoop jobs).|no (default == '/tmp/druid-indexing')|
 |version|String|The version of created segments.|no (default == datetime that indexing starts at)|
@@ -164,16 +158,14 @@ The tuningConfig is optional and default parameters will be used if no tuningCon
 |buildV9Directly|Boolean|Whether to build v9 index directly instead of building v8 index and convert it to v9 format|no (default = false)|
 |numBackgroundPersistThreads|Integer|The number of new background threads to use for incremental persists. Using this feature causes a notable increase in memory pressure and cpu usage, but will make the job finish more quickly. If changing from the default of 0 (use current thread for persists), we recommend setting it to 1.|no (default == 0)|
 
-### Partitioning specification
+### 分块规范
 
-Segments are always partitioned based on timestamp (according to the granularitySpec) and may be further partitioned in
-some other way depending on partition type. Druid supports two types of partitioning strategies: "hashed" (based on the
-hash of all dimensions in each row), and "dimension" (based on ranges of a single dimension).
+Segment总是基于timestamp分块的（根据granulartySpec)而且可能根据分区类型以一些其他的方式分区。
+Druid支持两种分块策略类型："hashed"（基于每一行所有维度的hash），和"dimension" （基于单维度的范围）。
 
-Hashed partitioning is recommended in most cases, as it will improve indexing performance and create more uniformly
-sized data segments relative to single-dimension partitioning.
+大部分情况下建议使用hash分区，因为它将提高索引性能和创建更多与单维度分区相关联的同等大小的数据Segment。
 
-#### Hash-based partitioning
+#### 基于hash的分块
 
 ```json
   "partitionsSpec": {
@@ -182,19 +174,18 @@ sized data segments relative to single-dimension partitioning.
    }
 ```
 
-Hashed partitioning works by first selecting a number of segments, and then partitioning rows across those segments
-according to the hash of all dimensions in each row. The number of segments is determined automatically based on the
-cardinality of the input set and a target partition size.
+hash分块首先选择大量的Segment，然后根据每行所有维度的hash，在这些Segment分块行。
+Segment的数量是自动基于输入的基数和分块大小来决定。
 
-The configuration options are:
+配置选项是：
 
-|property|description|required?|
+|属性|描述|要求|
 |--------|-----------|---------|
 |type|type of partitionSpec to be used |"hashed"|
 |targetPartitionSize|target number of rows to include in a partition, should be a number that targets segments of 500MB\~1GB.|either this or numShards|
 |numShards|specify the number of partitions directly, instead of a target partition size. Ingestion will run faster, since it can skip the step necessary to select a number of partitions automatically.|either this or targetPartitionSize|
 
-#### Single-dimension partitioning
+#### 单维度分块
 
 ```json
   "partitionsSpec": {
@@ -203,15 +194,13 @@ The configuration options are:
    }
 ```
 
-Single-dimension partitioning works by first selecting a dimension to partition on, and then separating that dimension
-into contiguous ranges. Each segment will contain all rows with values of that dimension in that range. For example,
-your segments may be partitioned on the dimension "host" using the ranges "a.example.com" to "f.example.com" and
-"f.example.com" to "z.example.com". By default, the dimension to use is determined automatically, although you can
-override it with a specific dimension.
+单维度首先选择一个维度分块，然后分离配置范围内的维度。
+每个Segment将包含所有范围内维度值的行。例如，你的Segment可能使用范围“a.example.com”到“f.example.com”然后“f.example.com”到“z.example.com”，在维度“host”分块。
+默认地，维度都是自动决定使用哪个的，尽管你可以通过指定一个维度来覆盖这项功能。
 
-The configuration options are:
+配置选项是：
 
-|property|description|required?|
+|属性|描述|要求|
 |--------|-----------|---------|
 |type|type of partitionSpec to be used |"dimension"|
 |targetPartitionSize|target number of rows to include in a partition, should be a number that targets segments of 500MB\~1GB.|yes|
@@ -219,31 +208,25 @@ The configuration options are:
 |partitionDimension|the dimension to partition on. Leave blank to select a dimension automatically.|no|
 |assumeGrouped|assume input data has already been grouped on time and dimensions. Ingestion will run faster, but can choose suboptimal partitions if the assumption is violated.|no|
 
-### Remote Hadoop Cluster
+### 远程Hadoop集群
 
-If you have a remote Hadoop cluster, make sure to include the folder holding your configuration `*.xml` files in your Druid `_common` configuration folder.  
-If you having dependency problems with your version of Hadoop and the version compiled with Druid, please see [these docs](../operations/other-hadoop.html).
+如果你有一个远程Hadoop集群，确保包含你的配置 `*.xml`文件的文件夹在你的Druid`_common`配置文件夹。
+如果你的Hadoop和Druid编译版本有依赖性问题，请参阅 [这些文档](../operations/other-hadoop.html)。
 
-### Using Elastic MapReduce
+### 使用弹性的 MapReduce
 
-If your cluster is running on Amazon Web Services, you can use Elastic MapReduce (EMR) to index data
-from S3. To do this:
+如果你的集群是运行在Amazon web Services，你可以使用Elastic MapRedure（EMR）从S3去索引数据。做到这些：
 
-- Create a persistent, [long-running cluster](http://docs.aws.amazon.com/ElasticMapReduce/latest/ManagementGuide/emr-plan-longrunning-transient.html).
-- When creating your cluster, enter the following configuration. If you're using the wizard, this
-should be in advanced mode under "Edit software settings".
-
+- 创建一个长久的， [long-running 集群](http://docs.aws.amazon.com/ElasticMapReduce/latest/ManagementGuide/emr-plan-longrunning-transient.html).
+- 当创建你的集群时，输入下面配置。如果你正在使用wizard，这个应该是"Edit software settings"下的高级模版。
 ```
 classification=yarn-site,properties=[mapreduce.reduce.memory.mb=6144,mapreduce.reduce.java.opts=-server -Xms2g -Xmx2g -Duser.timezone=UTC -Dfile.encoding=UTF-8 -XX:+PrintGCDetails -XX:+PrintGCTimeStamps,mapreduce.map.java.opts=758,mapreduce.map.java.opts=-server -Xms512m -Xmx512m -Duser.timezone=UTC -Dfile.encoding=UTF-8 -XX:+PrintGCDetails -XX:+PrintGCTimeStamps,mapreduce.task.timeout=1800000]
 ```
 
-- Follow the instructions under "[Configure Hadoop for data
-loads](../tutorials/cluster.html#configure-cluster-for-hadoop-data-loads)" using the XML files from
-`/etc/hadoop/conf` on your EMR master.
-
-#### Loading from S3 with EMR
-
-- In the `jobProperties` field in the `tuningConfig` section of your Hadoop indexing task, add:
+- 按照 "[为数据加载配置Hadoop](../tutorials/cluster.html#configure-cluster-for-hadoop-data-loads)" 说明
+从你的EMR`/etc/hadoop/conf`使用XML文件。
+#### EMR从S3加载
+- 在 `jobProperties`文件的Hadoop索引任务的 `tuningConfig`部分，增加：
 
 ```
 "jobProperties" : {
@@ -257,28 +240,24 @@ loads](../tutorials/cluster.html#configure-cluster-for-hadoop-data-loads)" using
 }
 ```
 
-Note that this method uses Hadoop's builtin S3 filesystem rather than Amazon's EMRFS, and is not compatible
-with Amazon-specific features such as S3 encryption and consistent views. If you need to use those
-features, you will need to make the Amazon EMR Hadoop JARs available to Druid through one of the
-mechanisms described in the [Using other Hadoop distributions](#using-other-hadoop-distributions) section.
+注意,这个方法使用Hadoop的S3装入文件系统,而不是Amazon的EMRFS,而且不兼容Amazon-specific的S3加密等特性和一致的观点。
+如果你需要使用这些功能,您需要提供Amazon EMR Hadoop jar，通过Druid中描述在[(使用其他Hadoop发行版)](#using-other-hadoop-distributions)部分的机制。
 
-## Using other Hadoop distributions
+## 使用其他Hadoop发行版
 
-Druid works out of the box with many Hadoop distributions.
+Druid可以运行许多Hadoop发行版。
 
-If you are having dependency conflicts between Druid and your version of Hadoop, you can try
-searching for a solution in the [Druid user groups](https://groups.google.com/forum/#!forum/druid-
-user), or reading the Druid [Different Hadoop Versions](../operations/other-hadoop.html) documentation.
+如果你的Druid和Hadoop版本有依赖性冲突，你可以试着在 [Druid 用户组](https://groups.google.com/forum/#!forum/druid-user)搜索解决方法，
+或者阅读Druid [不同的Hadoop版本](../operations/other-hadoop.html)文档。
 
-## Command Line Hadoop Indexer
+## 命令行Hadoop索引器
 
-If you don't want to use a full indexing service to use Hadoop to get data into Druid, you can also use the standalone command line Hadoop indexer. 
-See [here](../ingestion/command-line-hadoop-indexer.html) for more info.
+如果你不想使用一个完整的索引服务去用Hadoop获取数据到Druid，你也可以使用独立的命令行Hadoop索引器。
+查阅 [这里](../ingestion/command-line-hadoop-indexer.html) 了解更多信息。
 
-## IndexTask-based Batch Ingestion
+## 基于索引任务的批处理摄取
 
-If you do not want to have a dependency on Hadoop for batch ingestion, you can also use the index task. This task will be much slower and less scalable than the Hadoop-based method. See [here](../ingestion/tasks.html)for more info.   
-
-Having Problems?
+如果你不想依赖Hadoop批处理摄取，您还可以使用索引任务。这个任务会慢得多,也不如Hadoop-based方法可扩展。查阅 [这里](../ingestion/tasks.html)了解更多信息。
+有问题？
 ----------------
-Getting data into Druid can definitely be difficult for first time users. Please don't hesitate to ask questions in our IRC channel or on our [google groups page](https://groups.google.com/forum/#!forum/druid-user).
+用户第一次获取数据到Druid是非常困难的。如有问题，请在我们的IRC频道或者在我们的[google 页面](https://groups.google.com/forum/#!forum/druid-user)向我们提出。

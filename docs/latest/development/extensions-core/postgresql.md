@@ -2,44 +2,40 @@
 layout: doc_page
 ---
 
-# PostgreSQL Metadata Store
+# PostgreSQL 元数据存储
 
-Make sure to [include](../../operations/including-extensions.html) `postgresql-metadata-storage` as an extension.
+请确保[包含](../../operations/including-extensions.html) `postgresql-metadata-storage`作为一个扩展。
+## 安装 PostgreSQL
 
-## Setting up PostgreSQL
+1. 安装 PostgreSQL
 
-1. Install PostgreSQL
+  选择你最喜欢的软件管理器安装PostgreSQL，如：
+  - 在Ubuntu/Debian使用apt `apt-get install postgresql`
+  - 在OS X，使用 [Homebrew](http://brew.sh/) `brew install postgresql`
 
-  Use your favorite package manager to install PostgreSQL, e.g.:
-  - on Ubuntu/Debian using apt `apt-get install postgresql`
-  - on OS X, using [Homebrew](http://brew.sh/) `brew install postgresql`
 
-2. Create a druid database and user
+2. 创建一个druid数据库和用户
 
-  On the machine where PostgreSQL is installed, using an account with proper
-  postgresql permissions:
-
-  Create a druid user, enter `diurd` when prompted for the password.
-
+  在安装PostgreSQL的集群上，使用一个适当的Postgresql账户权限：
+ 
+  创建一个druid用户，当提交密码时进入`druid`。
+  
   ```bash
   createuser druid -P
   ```
 
-  Create a druid database owned by the user we just created
+  创建一个属于我们刚刚创建的用户的druid数据库
 
   ```bash
   createdb druid -O druid
   ```
 
-  *Note:* On Ubuntu / Debian you may have to prefix the `createuser` and
-  `createdb` commands with `sudo -u postgres` in order to gain proper
-  permissions.
+  *注意：* 在Ubuntu/Debian你可能需要在`sudo -u postgres`添加前缀`createuser`和`createdb`命令为了得到适当的权限。
 
-3. Configure your Druid metadata storage extension:
+3. 配置你的druid元数据存储扩展：
 
-  Add the following parameters to your Druid configuration, replacing `<host>`
-  with the location (host name and port) of the database.
-
+  增加下面的参数到你的Druid配置，用本地数据库的（主机名和端口号）代替`<host>`。
+ 
   ```properties
   druid.extensions.loadList=["postgresql-metadata-storage"]
   druid.metadata.storage.type=postgresql

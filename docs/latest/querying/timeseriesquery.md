@@ -1,13 +1,12 @@
 ---
 layout: doc_page
 ---
-Timeseries queries
+Timeseries 查询
 ==================
 
-These types of queries take a timeseries query object and return an array of JSON objects where each object represents a value asked for by the timeseries query.
+当每个对象代表timeseries 查询的一个值时，这类查询用timeseries查询对象和返回一个JSON对象数组。
 
-An example timeseries query object is shown below:
-
+timeseries查询对象示例如下：
 ```json
 {
   "queryType": "timeseries",
@@ -44,9 +43,8 @@ An example timeseries query object is shown below:
 }
 ```
 
-There are 7 main parts to a timeseries query:
-
-|property|description|required?|
+timeseries查询的7个主要部分：
+|属性|描述|要求|
 |--------|-----------|---------|
 |queryType|This String should always be "timeseries"; this is the first thing Druid looks at to figure out how to interpret the query|yes|
 |dataSource|A String or Object defining the data source to query, very similar to a table in a relational database. See [DataSource](../querying/datasource.html) for more information.|yes|
@@ -58,8 +56,9 @@ There are 7 main parts to a timeseries query:
 |postAggregations|See [Post Aggregations](../querying/post-aggregations.html)|no|
 |context|See [Context](../querying/query-context.html)|no|
 
-To pull it all together, the above query would return 2 data points, one for each day between 2012-01-01 and 2012-01-03, from the "sample\_datasource" table. Each data point would be the (long) sum of sample\_fieldName1, the (double) sum of sample\_fieldName2 and the (double) result of sample\_fieldName1 divided by sample\_fieldName2 for the filter set. The output looks like this:
-
+把这些都放在一起，上面的查询将返回2个数据点，一个是从"sample\_datasource"表中2012-01-01到2012-01-03之间的每一天。
+每个数据点sample\_fieldName1的总和（long），sample\_fieldName2的总和（double）和sample\_fieldName1的结果（double）是以sample\_fieldName2分界来过滤集合。
+输出是这样的：
 ```json
 [
   {
@@ -75,9 +74,8 @@ To pull it all together, the above query would return 2 data points, one for eac
 
 #### Zero-filling
 
-Timeseries queries normally fill empty interior time buckets with zeroes. For example, if you issue a "day" granularity
-timeseries query for the interval 2012-01-01/2012-01-04, and no data exists for 2012-01-02, you will receive:
-
+Timeseries查询通常填空
+Timeseries查询通常用零填补空的内部时间段查询。例如，如果你在2012-01-01/2012-01-04之间发出“天”的粒度timeseries查询，而且2012-01-02没有数据存在，你将获得:
 ```json
 [
   {
@@ -95,13 +93,10 @@ timeseries query for the interval 2012-01-01/2012-01-04, and no data exists for 
 ]
 ```
 
-Time buckets that lie completely outside the data interval are not zero-filled.
+时间段完全地处于外部的数据间隔不是零填充。
+你可以禁用所有用文本标志“skipEmptyBuckets”的零填充。在这种模式下，2012-01-02的数据点将会在结果中被省略。
 
-You can disable all zero-filling with the context flag "skipEmptyBuckets". In this mode, the data point for 2012-01-02
-would be omitted from the results.
-
-A query with this context flag set would look like:
-
+这个文本标志设置查询可以是这样：
 ```json
 {
   "queryType": "timeseries",

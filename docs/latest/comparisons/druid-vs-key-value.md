@@ -5,24 +5,20 @@ layout: doc_page
 Druid vs. Key/Value Stores (HBase/Cassandra/OpenTSDB)
 ====================================================
 
-Druid is highly optimized for scans and aggregations, it supports arbitrarily deep drill downs into data sets. This same functionality 
-is supported in key/value stores in 2 ways:
+Druid高度优化了扫描和聚合，它支持任意深钻波动数据集。同样的功能在key/value存储有两方式支持：
 
-1. Pre-compute all permutations of possible user queries
-2. Range scans on event data
+1. 计算所有可能的用户查询的排列
+2. 事件数据扫描范围
 
-When pre-computing results, the key is the exact parameters of the query, and the value is the result of the query.  
-The queries return extremely quickly, but at the cost of flexibility, as ad-hoc exploratory queries are not possible with 
-pre-computing every possible query permutation. Pre-computing all permutations of all ad-hoc queries leads to result sets 
-that grow exponentially with the number of columns of a data set, and pre-computing queries for complex real-world data sets 
-can require hours of pre-processing time.
+当预计算出结果时，key是查询的具体参数，value是查询的结果。
 
-The other approach to using key/value stores for aggregations to use the dimensions of an event as the key and the event measures as the value. 
-Aggregations are done by issuing range scans on this data. Timeseries specific databases such as OpenTSDB use this approach. 
-One of the limitations here is that the key/value storage model does not have indexes for any kind of filtering other than prefix ranges, 
-which can be used to filter a query down to a metric and time range, but cannot resolve complex predicates to narrow the exact data to scan. 
-When the number of rows to scan gets large, this limitation can greatly reduce performance. It is also harder to achieve good 
-locality with key/value stores because most don’t support pushing down aggregates to the storage layer.
+查询返回非常迅速，但在灵活性的代价，因为ad-hoc探索查询是不可能用预计算每个可能的查询排序。
+预计算所有ad-hoc查询的排序导致结果集数据集的列数指数增长，而预计算查询复杂的真实世界的数据集可能需要几个小时的预处理时间。
 
-For arbitrary exploration of data (flexible data filtering), Druid's custom column format enables ad-hoc queries without pre-computation. The format 
-also enables fast scans on columns, which is important for good aggregation performance.
+
+另一种使用key/value存储聚合的方法是使用一个事件的dimensions作为key和事件的措施作为value。
+聚合是通过发行扫描数据的范围实现的。Timeseries指定数据库如OpenTSDB就是使用这种方法。　
+这里有一个限制是key/value存储模型对于除了前缀范围的任何过滤没有索引，这可用于过滤查询指标和时间范围,但不能解决复杂判断缩小扫描的数据。　
+当扫描的行数变大时，这种限制可以大大降低性能。这也是难以取得良好key/value存储位置，因为大部分不支持聚集推到存储层。
+
+对于数据（灵活的数据过滤）的任意探索，Druid自定义列格式能使ad-hoc查询不需要预计算。这种格式也能快速扫描列，而且对于好的聚合性能是很重要的。

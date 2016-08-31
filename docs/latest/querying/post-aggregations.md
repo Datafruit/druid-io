@@ -2,30 +2,26 @@
 layout: doc_page
 ---
 # Post-Aggregations
-Post-aggregations are specifications of processing that should happen on aggregated values as they come out of Druid. If you include a post aggregation as part of a query, make sure to include all aggregators the post-aggregator requires.
+Post-aggregations是处理过程的规范，应该在Druid产生聚合值。
+如果你包括post aggregation作为查询的一部分，一定要包括所有的聚合器post-aggregator要求。
 
-There are several post-aggregators available.
+这是几种可行的post-aggregators。
+### 算术post-aggregators
 
-### Arithmetic post-aggregator
+算术post-aggregator所提供的功能适用于从左到右给定的段。字段可以是聚合器或其他post aggregators。
 
-The arithmetic post-aggregator applies the provided function to the given
-fields from left to right. The fields can be aggregators or other post aggregators.
+支持`+`， `-`，`*`， `/`，和`quotient`。
+**注意**:
 
-Supported functions are `+`, `-`, `*`, `/`, and `quotient`.
+* `/` 如果除数是`0`，那么`/`除法都是返回`0`，不管是分式。
+* `quotient`除法像普通的浮点型除法。
 
-**Note**:
+算术post-aggregators也可以指定一个“顺序”，它定义了顺序排序结果时产生的值(这可以用于topN查询):
 
-* `/` division always returns `0` if dividing by`0`, regardless of the numerator.
-* `quotient` division behaves like regular floating point division
+-  如果没有指定顺序(或`null`)，默认使用浮点数排序。
+- `numericFirst`总是先返回有限值，然后返回`NaN`，最后返回极大的值。
 
-Arithmetic post-aggregators may also specify an `ordering`, which defines the order
-of resulting values when sorting results (this can be useful for topN queries for instance):
-
-- If no ordering (or `null`) is specified, the default floating point ordering is used.
-- `numericFirst` ordering always returns finite values first, followed by `NaN`, and infinite values last.
-
-The grammar for an arithmetic post aggregation is:
-
+算术post-aggregator语法如下：
 ```json
 postAggregation : {
   "type"  : "arithmetic",
@@ -36,28 +32,24 @@ postAggregation : {
 }
 ```
 
-### Field accessor post-aggregator
+### 字段访问器post-aggregator
 
-This returns the value produced by the specified [aggregator](../querying/aggregations.html).
-
-`fieldName` refers to the output name of the aggregator given in the [aggregations](../querying/aggregations.html) portion of the query.
-
+这个返回的值由指定的[聚合器](../querying/aggregations.html)产生。
+`fieldName`指的是给定的聚合器在[聚合](../querying/aggregations.html)查询部分输出的名称。
 ```json
 { "type" : "fieldAccess", "name": <output_name>, "fieldName" : <aggregator_name> }
 ```
 
-### Constant post-aggregator
+### 常数 post-aggregator
 
-The constant post-aggregator always returns the specified value.
-
+常数 post-aggregator返回指定的值。
 ```json
 { "type"  : "constant", "name"  : <output_name>, "value" : <numerical_value> }
 ```
 
 ### JavaScript post-aggregator
 
-Applies the provided JavaScript function to the given fields. Fields are passed as arguments to the JavaScript function in the given order.
-
+提供JavaScript函数适用于给定的字段。字段作为参数传递给给定顺序的JavaScript函数。
 ```json
 postAggregation : {
   "type": "javascript",
@@ -67,8 +59,7 @@ postAggregation : {
 }
 ```
 
-Example JavaScript aggregator:
-
+JavaScript aggregator例子：
 ```json
 {
   "type": "javascript",
@@ -77,16 +68,14 @@ Example JavaScript aggregator:
   "function": "function(delta, total) { return 100 * Math.abs(delta) / total; }"
 }
 ```
-### HyperUnique Cardinality post-aggregator
+### HyperUnique 基数 post-aggregator
 
-The hyperUniqueCardinality post aggregator is used to wrap a hyperUnique object such that it can be used in post aggregations.
-
+HyperUnique Cardinality post-aggregator是用于包装hyperUnique对象，这样它可以用于聚合。
 ```json
 { "type"  : "hyperUniqueCardinality", "name": <output name>, "fieldName"  : <the name field value of the hyperUnique aggregator>}
 ```
 
-It can be used in a sample calculation as so:
-
+它可以用在实例计算如：
 ```json
   "aggregations" : [{
     {"type" : "count", "name" : "rows"},
@@ -103,12 +92,11 @@ It can be used in a sample calculation as so:
   }]
 ```
 
-## Example Usage
+## 用法示例
 
-In this example, let’s calculate a simple percentage using post aggregators. Let’s imagine our data set has a metric called "total".
+在这个示例中，我们用post aggregator计算一个简单的比例。我们先设想数据有个指标为“total”。
 
-The format of the query JSON is as follows:
-
+JSON查询格式如下：
 ```json
 {
   ...

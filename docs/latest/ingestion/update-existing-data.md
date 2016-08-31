@@ -1,53 +1,43 @@
 ---
 layout: doc_page
 ---
-# Updating Existing Data
+# 更新现有的数据
 
-Once you ingest some data in a dataSource for an interval and create Druid segments, you might want to make changes to 
-the ingested data. There are several ways this can be done.
+对于时间间隔并创建Druid段，一旦摄入一些数据源中的数据,您可能想要更改摄入数据。有几种方法可以做到这一点。
 
-##### Updating Dimension Values
+##### 更新维度值
 
-If you have a dimension where values need to be updated frequently, try first using [lookups](../querying/lookups.html). A 
-classic use case of lookups is when you have an ID dimension stored in a Druid segment, and want to map the ID dimension to a 
-human-readable String value that may need to be updated periodically.
+如果你有一个维度值需要频繁更新,首先试试使用[查找](../querying/lookups.html)。
+一个查找的典型用例是当你有一个ID维度存储在一个Druid段,并希望ID维度映射到一个人们可读的字符串值,可能需要定期更新。
+##### 重建段（重建索引）
 
-##### Rebuilding Segments (Reindexing)
+如果查询充分,你可以完全重建Druid段特定的间隔时间。
+重建一个段被称为重建索引数据。举个例子,如果你想添加或删除列从你现有的段,或者你想改变你的汇总粒度段,您将不得不重建索引数据。
+我们建议保持你的原始数据的一个副本,以防你需要重建索引数据。
+##### 处理延迟事件(Delta摄入)
 
-If lookups are not sufficient, you can entirely rebuild Druid segments for specific intervals of time. Rebuilding a segment 
-is known as reindexing the data. For example, if you want to add or remove columns from your existing segments, or you want to 
-change the rollup granularity of your segments, you will have to reindex your data.
+如果你有一批摄入管道和延迟事件进来,想将这些事件附加到现有的段,为避免重建新的段重建索引的开销,您可以使用delta摄入。
+### 使用Hadoop批摄入重建索引和delta摄入
 
-We recommend keeping a copy of your raw data around in case you ever need to reindex your data.
+本节假设读者知道如何做批处理使用Hadoop摄入。
+查阅[批摄取](batch-ingestion.html)了解更多信息。Hadoop 批摄取可用于重建索引和delta摄入。
 
-##### Dealing with Delayed Events (Delta Ingestion)
+Druid在`ioConfig`中使用一个`inputSpec`了解摄取的数据所在以及如何读它。
+对于简单的Hadoop批摄入,`静态`或`粒度`规范类型允许您在深存储读取数据存储。
+还有其他类型的`inputSpec`使用重建索引和delta摄入。
+#### `数据源`
 
-If you have a batch ingestion pipeline and have delayed events come in and want to append these events to existing 
-segments and avoid the overhead of rebuilding new segments with reindexing, you can use delta ingestion.
+这是一种`inputSpec`,读取数据已经存储在Druid。
 
-### Reindexing and Delta Ingestion with Hadoop Batch Ingestion
-
-This section assumes the reader understands how to do batch ingestion using Hadoop. See 
-[batch-ingestion](batch-ingestion.html) for more information. Hadoop batch-ingestion can be used for reindexing and delta ingestion.
-
-Druid uses an `inputSpec` in the `ioConfig` to know where the data to be ingested is located and how to read it. 
-For simple Hadoop batch ingestion, `static` or `granularity` spec types allow you to read data stored in deep storage.
-
-There are other types of `inputSpec` to enable reindexing and delta ingestion.
-
-#### `dataSource`
-
-This is a type of `inputSpec` that reads data already stored inside Druid.
-
-|Field|Type|Description|Required|
+|字段|类型|描述|必须|
 |-----|----|-----------|--------|
 |type|String.|This should always be 'dataSource'.|yes|
 |ingestionSpec|JSON object.|Specification of Druid segments to be loaded. See below.|yes|
 |maxSplitSize|Number|Enables combining multiple segments into single Hadoop InputSplit according to size of segments. Default is none. |no|
+ 
+`ingestionSpec`的内容如下：  
 
-Here is what goes inside `ingestionSpec`:
-
-|Field|Type|Description|Required|
+|字段|类型|描述|必须|
 |-----|----|-----------|--------|
 |dataSource|String|Druid dataSource name from which you are loading the data.|yes|
 |intervals|List|A list of strings representing ISO-8601 Intervals.|yes|
@@ -57,7 +47,7 @@ Here is what goes inside `ingestionSpec`:
 |metrics|Array of String|Name of metric columns to load. By default, the list will be constructed from the "name" of all the configured aggregators.|no|
 |ignoreWhenNoSegments|boolean|Whether to ignore this ingestionSpec if no segments were found. Default behavior is to throw error when no segments were found.|no|
 
-For example
+示例
 
 ```json
 "ioConfig" : {
@@ -75,15 +65,13 @@ For example
 
 #### `multi`
 
-This is a composing inputSpec to combine other inputSpecs. This inputSpec is used for delta ingestion. 
-Please note that delta ingestion is not an idempotent operation. We may add change things in future to make it idempotent.
-
-|Field|Type|Description|Required|
+这是一个组合inputSpec与其他inputSpecs结合。这个inputSpec用于delta摄入。
+请注意,delta摄入并不是一个幂等操作。我们将来可以增加一些改变使得它幂等。
+|字段|类型|描述|必须|
 |-----|----|-----------|--------|
 |children|Array of JSON objects|List of JSON objects containing other inputSpecs.|yes|
 
-For example:
-
+示例：
 ```json
 "ioConfig" : {
   "type" : "hadoop",
@@ -107,10 +95,8 @@ For example:
 }
 ```
 
-### Reindexing without Hadoop Batch Ingestion
+### 重建索引没有Hadoop批摄入
 
-This section assumes the reader understands how to do batch ingestion without Hadoop using the [IndexTask](../ingestion/tasks.html#index-task),  
-which uses a "firehose" to know where and how to read the input data. [IngestSegmentFirehose](firehose.html#ingestsegmentfirehose) 
-can be used to read data from segments inside Druid. Note that IndexTask is to be used for prototyping purposes only as 
-it has to do all processing inside a single process and can't scale. Please use Hadoop batch ingestion for production 
-scenarios dealing with more than 1GB of data.
+这部分假设读者理解使用[IndexTask](../ingestion/tasks.html#index-task)不用Hadoop怎样批摄取，这个是用了一个“Firehoses“来了解输入的数据所在和怎么读取。
+[IngestSegmentFirehose](firehose.html#ingestsegmentfirehose)可以从Druid里的段读取数据。 
+注意,索引任务用于原型的目的只有这所有的处理在一个过程。生产场景处理超过1GB的数据请使用Hadoop批量摄入。

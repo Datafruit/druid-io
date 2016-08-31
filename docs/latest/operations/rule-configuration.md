@@ -1,24 +1,25 @@
 ---
 layout: doc_page
 ---
-# Retaining or Automatically Dropping Data
+# 保留或自动删除数据
+  
+协调器节点使用规则来确定应该从集群加载或删除哪些数据。恢复数据的规则是在协调器控制台设置 (http://coordinator_ip:port) 。
 
-Coordinator nodes use rules to determine what data should be loaded or dropped from the cluster. Rules are used for data retention and are set on the coordinator console (http://coordinator_ip:port).
+规则指明应该如何分配段给不同的历史节点和每一层应该存储多少个副段。规则也可能表明段应该什么时候从集群完全删除。
+协调器从元数据存储加载一组规则。规则可能是特定于某个数据源和/或一组可以配置的默认规则。规则是按顺序阅读的,因此,排序规则是很重要的。
+协调器将循环通过所有可用的段，每个段与第一规则匹配。每个段只能匹配一个规则。
 
-Rules indicate how segments should be assigned to different historical node tiers and how many replicas of a segment should exist in each tier. Rules may also indicate when segments should be dropped entirely from the cluster. The coordinator loads a set of rules from the metadata storage. Rules may be specific to a certain datasource and/or a default set of rules can be configured. Rules are read in order and hence the ordering of rules is important. The coordinator will cycle through all available segments and match each segment with the first rule that applies. Each segment may only match a single rule.
+注意:建议配置规则使用协调器控制台。然而,协调器节点有HTTP端点以编程方式配置规则。
 
-Note: It is recommended that the coordinator console is used to configure rules. However, the coordinator node does have HTTP endpoints to programmatically configure rules.
+更新规则时,这一变化直到下一次运行协调器时才反应。这在未来一段时间都是固定的。
 
-When a rule is updated, the change may not be reflected until the next time the coordinator runs. This will be fixed in the near future.
+加载规则
+---------------
 
-Load Rules
-----------
+加载规则表明应该存多少副本段在服务器层。
+### 永久的加载规则
 
-Load rules indicate how many replicas of a segment should exist in a server tier.
-
-### Forever Load Rule
-
-Forever load rules are of the form:
+永久的加载规则格式：
 
 ```json
 {
@@ -30,13 +31,13 @@ Forever load rules are of the form:
 }
 ```
 
-* `type` - this should always be "loadForever"
-* `tieredReplicants` - A JSON Object where the keys are the tier names and values are the number of replicas for that tier.
+* `type` - 这应该总是“永久加载”
+* `tieredReplicants` - 层名称是键，层的副本数是值JSON对象。
 
 
-### Interval Load Rule
+### 间隔地加载规则
 
-Interval load rules are of the form:
+间隔地加载规则格式如下：
 
 ```json
 {
@@ -49,14 +50,14 @@ Interval load rules are of the form:
 }
 ```
 
-* `type` - this should always be "loadByInterval"
-* `interval` - A JSON Object representing ISO-8601 Intervals
-* `tieredReplicants` - A JSON Object where the keys are the tier names and values are the number of replicas for that tier.
+* `type` - 这个应该总是“间隔加载”
+* `interval` - 一个代表ISO-8601间隔的JSON对象
+* `tieredReplicants` - 层名称是键，层的副本数是值JSON对象
 
-### Period Load Rule
 
-Period load rules are of the form:
+### 周期加载规则
 
+周期加载规则格式如下：
 ```json
 {
   "type" : "loadByPeriod",
@@ -68,36 +69,31 @@ Period load rules are of the form:
 }
 ```
 
-* `type` - this should always be "loadByPeriod"
-* `period` - A JSON Object representing ISO-8601 Periods
-* `tieredReplicants` - A JSON Object where the keys are the tier names and values are the number of replicas for that tier.
+* `type` - 这个应该总是“周期加载”
+* `period` - 一个代表ISO-8601周期的JSON对象
+* `tieredReplicants` - 层名称是键，层的副本数是值JSON对象
 
-The interval of a segment will be compared against the specified period. The rule matches if the period overlaps the interval.
-
-Drop Rules
+段间隔与指定周期不一样。如果周期与这个区间重叠，则规则匹配。
+删除规则
 ----------
 
-Drop rules indicate when segments should be dropped from the cluster.
+删除规则表明从集群中删除段的时间。
+### 永久删除规则
 
-### Forever Drop Rule
-
-Forever drop rules are of the form:
-
+永久删除规则格式：
 ```json
 {
   "type" : "dropForever"  
 }
 ```
 
-* `type` - this should always be "dropForever"
+* `type` - 这个应该总是“永久删除”
 
-All segments that match this rule are dropped from the cluster.
+所有匹配这个规则的段应该从集群中删除。
 
+### 区间删除规则
 
-### Interval Drop Rule
-
-Interval drop rules are of the form:
-
+区间的删除规则格式：
 ```json
 {
   "type" : "dropByInterval",
@@ -105,15 +101,13 @@ Interval drop rules are of the form:
 }
 ```
 
-* `type` - this should always be "dropByInterval"
-* `interval` - A JSON Object representing ISO-8601 Periods
+* `type` - 这个应该总是被“区间的删除”
+* `interval` - 代表ISO-8601周期的JSON对象
 
-A segment is dropped if the interval contains the interval of the segment.
+如果区间包含区间段则删除该段。
+### 周期删除规则
 
-### Period Drop Rule
-
-Period drop rules are of the form:
-
+周期删除规则格式：
 ```json
 {
   "type" : "dropByPeriod",
@@ -121,12 +115,12 @@ Period drop rules are of the form:
 }
 ```
 
-* `type` - this should always be "dropByPeriod"
-* `period` - A JSON Object representing ISO-8601 Periods
+* `type` - 这个应该总是“周期删除”
+* `period` - 代表ISO-8601周期的JSON对象
 
-The interval of a segment will be compared against the specified period. The period is from some time in the past to the current time. The rule matches if the period contains the interval.
+段间隔与指定周期不一样。周期是指从过去某段时间到当前时间的一段时间。
 
-# Permanently Deleting Data
+# 永久的删除数据
  
- Druid can fully drop data from the cluster, wipe the metadata store entry, and remove the data from deep storage for any segments that are 
- marked as unused (segments dropped from the cluster via rules are always marked as unused). You can submit a [kill task](../ingestion/tasks.html) to the [indexing service](../design/indexing-service.html) to do this.
+Druid可以从集群中完全删除数据，包括元数据存储条目,从深存储中移除数据，任何标记为未使用的段（通过总是标记为未使用的规则从集群中删除段）。
+你可以提交一个[强制关闭任务](../ingestion/tasks.html)到[索引服务](../design/indexing-service.html)去执行。

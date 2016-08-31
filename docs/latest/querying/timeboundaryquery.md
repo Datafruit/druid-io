@@ -1,9 +1,8 @@
 ---
 layout: doc_page
 ---
-# Time Boundary Queries
-Time boundary queries return the earliest and latest data points of a data set. The grammar is:
-
+# Time boundary查询
+Time boundary查询返回数据集的最早和最新的数据点。语法如下：
 ```json
 {
     "queryType" : "timeBoundary",
@@ -12,17 +11,15 @@ Time boundary queries return the earliest and latest data points of a data set. 
 }
 ```
 
-There are 3 main parts to a time boundary query:
-
-|property|description|required?|
+time boundary查询有3个主要部分：
+|属性|描述|要求|
 |--------|-----------|---------|
 |queryType|This String should always be "timeBoundary"; this is the first thing Druid looks at to figure out how to interpret the query|yes|
 |dataSource|A String or Object defining the data source to query, very similar to a table in a relational database. See [DataSource](../querying/datasource.html) for more information.|yes|
 |bound   | Optional, set to `maxTime` or `minTime` to return only the latest or earliest timestamp. Default to returning both if not set| no |
 |context|See [Context](../querying/query-context.html)|no|
 
-The format of the result is:
-
+结果的格式是：
 ```json
 [ {
   "timestamp" : "2013-05-09T18:24:00.000Z",

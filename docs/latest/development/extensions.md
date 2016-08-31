@@ -2,24 +2,21 @@
 layout: doc_page
 ---
 
-# Druid extensions
+# Druid 扩展
 
-Druid implements an extension system that allows for adding functionality at runtime. Extensions
-are commonly used to add support for deep storages (like HDFS and S3), metadata stores (like MySQL
-and PostgreSQL), new aggregators, new input formats, and so on.
+Druid执行一个扩展系统,允许在运行时添加功能。扩展通常用于添加支持深存储(比如HDFS和S3),元数据存储(比如MySQL和PostgreSQL),新的聚合器,新的输入格式,等等。
 
-Production clusters will generally use at least two extensions; one for deep storage and one for a
-metadata store. Many clusters will also use additional extensions.
+生产集群将至少使用两个扩展；一个为深存储，另一个为元数据存储。很多集群也将使用额外的扩展。
 
-## Including extensions
+## 包括扩展
+ 
+请查阅[这里](../operations/including-extensions.html)。
 
-Please see [here](../operations/including-extensions.html). 
+## 核心扩展
 
-## Core extensions
+核心扩展是Druid提交者维护的。
 
-Core extensions are maintained by Druid committers.
-
-|Name|Description|Docs|
+|名称|描述|文档|
 |----|-----------|----|
 |druid-avro-extensions|Support for data in Apache Avro data format.|[link](../development/extensions-core/avro.html)|
 |druid-datasketches|Support for approximate counts and set operations with [DataSketches](http://datasketches.github.io/).|[link](../development/extensions-core/datasketches-aggregators.html)|
@@ -32,13 +29,13 @@ Core extensions are maintained by Druid committers.
 |mysql-metadata-storage|MySQL metadata store.|[link](../development/extensions-core/mysql.html)|
 |postgresql-metadata-storage|PostgreSQL metadata store.|[link](../development/extensions-core/postgresql.html)|
 
-# Community Extensions
+# 社区扩展
+    
+很多社区成员贡献了自己的扩展到Druid，不打包默认的Druid压缩文件。
+社区扩展不是由Druid提交者维护的,尽管我们接受来自社区成员的补丁去使用这些扩展。
+如果你想维护社区扩展，请发送请求到[druid-development group](https://groups.google.com/forum/#!forum/druid-development)让我们知道！
 
-A number of community members have contributed their own extensions to Druid that are not packaged with the default Druid tarball. 
-Community extensions are not maintained by Druid committers, although we accept patches from community members using these extensions. 
-If you'd like to take on maintenance for a community extension, please post on [druid-development group](https://groups.google.com/forum/#!forum/druid-development) to let us know!    
-
-|Name|Description|Docs|
+|名称|描述|文档|
 |----|-----------|----|
 |druid-azure-extensions|Microsoft Azure deep storage.|[link](../development/extensions-contrib/azure.html)|
 |druid-cassandra-storage|Apache Cassandra deep storage.|[link](../development/extensions-contrib/cassandra.html)|
@@ -47,7 +44,7 @@ If you'd like to take on maintenance for a community extension, please post on [
 |druid-rabbitmq|RabbitMQ firehose.|[link](../development/extensions-contrib/rabbitmq.html)|
 |graphite-emitter|Graphite metrics emitter|[link](../development/extensions-contrib/graphite.html)|
 
-## Promoting Community Extension to Core Extension
-
-Please [let us know](https://groups.google.com/forum/#!forum/druid-development) if you'd like an extension to be promoted to core. 
-If we see a community extension actively supported by the community, we can promote it to core based on community feedback. 
+## 提升社区扩展为核心扩展
+ 
+如果你想要提升扩展为核心，请[让我们知道](https://groups.google.com/forum/#!forum/druid-development)。
+如果我们看到一个社区扩展被社区积极支持,我们可以基于社区的反馈提升它为核心。

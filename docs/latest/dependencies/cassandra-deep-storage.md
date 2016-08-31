@@ -2,16 +2,15 @@
 layout: doc_page
 ---
 
-## Introduction
-Druid can use Cassandra as a deep storage mechanism. Segments and their metadata are stored in Cassandra in two tables:
-`index_storage` and `descriptor_storage`.  Underneath the hood, the Cassandra integration leverages Astyanax.  The 
-index storage table is a [Chunked Object](https://github.com/Netflix/astyanax/wiki/Chunked-Object-Store) repository. It contains
-compressed segments for distribution to historical nodes.  Since segments can be large, the Chunked Object storage allows the integration to multi-thread
-the write to Cassandra, and spreads the data across all the nodes in a cluster.  The descriptor storage table is a normal C* table that 
-stores the segment metadatak.  
+## Introduction 介绍
+
+Druid可以使用Cassandra作为深存储机制。Segment和它们的元数据是存储在Cassandra的两个表中的：
+`index_storage`和`descriptor_storage`。在Hood下面，Cassandra摄取影响Astyanax。索引存储表是一个[分块对象](https://github.com/Netflix/astyanax/wiki/Chunked-Object-Store)仓库。
+它包含了分配给Historical节点的压缩Segment。由于segments可以扩大，分块对象存储允许集成多线程写到Cassandra，并将数据分散到集群中的所有节点。描述符存储表是一个正常的C*表存储segment metadatak。
+
 
 ## Schema
-Below are the create statements for each:
+下面是创建语句：
 
 ```sql
 CREATE TABLE index_storage(key text,
@@ -25,12 +24,9 @@ CREATE TABLE descriptor_storage(key varchar,
                                 PRIMARY KEY (key)) WITH COMPACT STORAGE;
 ```
 
-## Getting Started
-First create the schema above. I use a new keyspace called `druid` for this purpose, which can be created using the
-[Cassandra CQL `CREATE KEYSPACE`](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/create_keyspace_r.html) command.
-
-Then, add the following to your historical and realtime runtime properties files to enable a Cassandra backend.
-
+## 入门指南
+首先创建schema。这一步我使用一个新的keySpace叫做`druid`，可以使用[Cassandra CQL `CREATE KEYSPACE`](http://www.datastax.com/documentation/cql/3.1/cql/cql_reference/create_keyspace_r.html) 命令创建。
+然后，增加下面的语句到你的Historical和Realtime Runtime属性文件来启动Cassandra后台。
 ```properties
 druid.extensions.loadList=["druid-cassandra-storage"]
 druid.storage.type=c*
@@ -38,7 +34,4 @@ druid.storage.host=localhost:9160
 druid.storage.keyspace=druid
 ```
 
-Use the `druid-development@googlegroups.com` mailing list if you have questions,
-or feel free to reach out directly: `bone@alumni.brown.edu`.
-
-
+如果你有问题，请用`druid-development@googlegroups.com`邮件发送过来，或者直接到`bone@alumni.brown.edu`

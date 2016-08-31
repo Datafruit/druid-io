@@ -3,33 +3,20 @@ layout: doc_page
 ---
 # Joins
 
-Druid has limited support for joins through [query-time lookups](../querying/lookups.html). The common use case of 
-query-time lookups is to replace one dimension value that (e.g. a String ID) with another value (e.g. a human-readable  
-String value). This is similar a star-schema join.
+Druid有限支持joins通过[query-time lookups](../querying/lookups.html)。
+常见的query-time lookups用例是用另一个值(例如，一个人类可读的字符串值)替换一个维度的值(例如，一个字符串ID)。
+这类似一个star-schema join。
 
-Druid does not yet have full support for joins. Although Druid’s storage format would allow for the implementation 
-of joins (there is no loss of fidelity for columns included as dimensions), full support for joins have not yet been implemented yet 
-for the following reasons:
+Druid还没有完全支持joins。尽管Druid's的存储格式将允许joins的执行(包括没有失去列维度)，
+完全支持连接尚未实现为以下原因:
 
-1. Scaling join queries has been, in our professional experience, 
-a constant bottleneck of working with distributed databases.
-2. The incremental gains in functionality are perceived to be 
-of less value than the anticipated problems with managing 
-highly concurrent, join-heavy workloads.
+1. 扩展连接查询，已经成为我们的专业经验里，一个常数与分布式数据库的瓶颈。
+2. 增量收益功能被认为是管理价值低于预期的问题高并发，join-heavy工作负载。
 
-A join query is essentially the merging of two or more streams of data based on a shared set of keys. The primary  
-high-level strategies for join queries we are aware of are a hash-based strategy or a 
-sorted-merge strategy. The hash-based strategy requires that all but 
-one data set be available as something that looks like a hash table, 
-a lookup operation is then performed on this hash table for every 
-row in the “primary” stream. The sorted-merge strategy assumes 
-that each stream is sorted by the join key and thus allows for the incremental 
-joining of the streams. Each of these strategies, however, 
-requires the materialization of some number of the streams either in 
-sorted order or in a hash table form.
 
-When all sides of the join are significantly large tables (> 1 billion 
-records), materializing the pre-join streams requires complex 
-distributed memory management. The complexity of the memory 
-management is only amplified by the fact that we are targeting highly 
-concurrent, multi-tenant workloads.
+连接查询是根据一组共享的密钥合并两个或多个数据流。主高级战略连接查询，我们意识到是hash-based策略或者sorted-merge策略。
+hash-based策略要求所有一个数据集可以看起来像一个hash表，然后执行查找操作这对这个hash表“primary”流中的每一行。
+sorted-merge策略假设每个流都是排序的连接键，从而允许增量加入的流。然而，每一种策略要么一些实体化的流顺序或hash表的格式。
+
+当加入数量相当大的表(>10亿记录)，需要复杂的物化pre-join流分布式内存管理。
+内存的复杂性管理是只有我们目标高度放大并发多租户工作负载的事实。

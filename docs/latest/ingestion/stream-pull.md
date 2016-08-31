@@ -1,34 +1,26 @@
 ---
 layout: doc_page
 ---
+流拉摄取
+=========================
 
-Stream Pull Ingestion
-=====================
+如果你想从外部服务拉数据，你有两个选择。最简单的选择是设置“复制”从数据源读取的服务和使用[流推方法](#stream-push)写到Druid。
 
-If you have an external service that you want to pull data from, you have two options. The simplest
-option is to set up a "copying" service that reads from the data source and writes to Druid using
-the [stream push method](stream-push.html).
+另一选择是*流拉*。使用这个方法，Druid实时节点从[Firehose](../ingestion/firehose.html)摄取数据连接到你想要读的数据。
+Druid快速入门和教程不包括怎么设置独立的实时节点，但是它可以适当的使用于Tranguility服务和索引服务。请注意实时节点比索引服务有更多的属性。
 
-Another option is *stream pull*. With this approach, a Druid Realtime Node ingests data from a
-[Firehose](../ingestion/firehose.html) connected to the data you want to
-read. The Druid quickstart and tutorials do not include information about how to set up standalone realtime nodes, but 
-they can be used in place for Tranquility server and the indexing service. Please note that Realtime nodes have very properties than 
-the indexing service.
 
-## Realtime Node Ingestion
 
-Much of the configuration governing Realtime nodes and the ingestion of data is set in the Realtime spec file, discussed on this page.
+## 实时节点摄取
 
-For general Real-time Node information, see [here](../design/realtime.html).
-
-For Real-time Node Configuration, see [Realtime Configuration](../configuration/realtime.html).
-
-For writing your own plugins to the real-time node, see [Firehose](../ingestion/firehose.html).
+在这个页面上，多大数配置管理的实时节点和数据集的摄入是设置在实时规范文件中的。
+对于一般实时节点信息，查阅[这里](../design/realtime.html)。
+对于实时节点配置，查阅[实时配置](../configuration/realtime.html)。
+对于写你的组件到实时节点，查阅[Firehose](../ingestion/firehose.html)。
 
 ## Realtime "specFile"
 
-The property `druid.realtime.specFile` has the path of a file (absolute or relative path and file name) with realtime specifications in it. This "specFile" should be a JSON Array of JSON objects like the following:
-
+`druid.realtime.specFile`文件有一个文件的路径（绝对路径或者相对路径和文件名）有实时规范。这个“specFile”应该是一个JSON对象的一个JSON数组，如以下：
 ```json
 [
   {
@@ -105,21 +97,20 @@ The property `druid.realtime.specFile` has the path of a file (absolute or relat
 ]
 ```
 
-This is a JSON Array so you can give more than one realtime stream to a given node. The number you can put in the same process depends on the exact configuration. In general, it is best to think of each realtime stream handler as requiring 2-threads: 1 thread for data consumption and aggregation, 1 thread for incremental persists and other background tasks.
+这是一个JSON数组，所以你可以给更多实时流到给定的节点。你放进相同程序的数量取决于精准的配置。
+一般来讲，这个最好考虑每个实时流处理程序要求2-threads:1线程数据消费和聚合,线程增量持续和其他后台任务。
 
-There are three parts to a realtime stream specification, `dataSchema`, `IOConfig`, and `tuningConfig` which we will go into here.
+实时流规范有三部分，`dataSchema`, `IOConfig`,和 `tuningConfig`，我们下面开始讲。
 
 ### DataSchema
 
-This field is required.
+这个字段是必须的。
 
-See [Ingestion](../ingestion/index.html)
-
+查阅[摄取](../ingestion/index.html)。
 ### IOConfig
 
-This field is required.
-
-|Field|Type|Description|Required|
+这个字段是必须的。
+|字段|类型|描述|必须|
 |-----|----|-----------|--------|
 |type|String|This should always be 'realtime'.|yes|
 |firehose|JSON Object|Where the data is coming from. Described in detail below.|yes|
@@ -127,19 +118,17 @@ This field is required.
 
 #### Firehose
 
-See [Firehose](../ingestion/firehose.html) for more information on various firehoses.
-
+查阅[Firehose](../ingestion/firehose.html)了解更多不同的firhoses信息。
 #### Plumber
 
-|Field|Type|Description|Required|
+|字段|类型|描述|必须|
 |-----|----|-----------|--------|
 |type|String|This should always be 'realtime'.|no|
 
-### TuningConfig
+### 优化配置
 
-The tuningConfig is optional and default parameters will be used if no tuningConfig is specified.
-
-|Field|Type|Description|Required|
+这个优化配置是可选的，如果没有指定优化配置则使用默认参数。
+|字段|类型|描述|必须|
 |-----|----|-----------|--------|
 |type|String|This should always be 'realtime'.|no|
 |maxRowsInMemory|Integer|The number of rows to aggregate before persisting. This number is the post-aggregation rows, so it is not equivalent to the number of input events, but the number of aggregated rows that those events result in. This is used to manage the required JVM heap size. Maximum heap memory usage for indexing scales with maxRowsInMemory * (2 + maxPendingPersists).|no (default == 500000)|
@@ -155,44 +144,37 @@ The tuningConfig is optional and default parameters will be used if no tuningCon
 |mergeThreadPriority|int|If `-XX:+UseThreadPriorities` is properly enabled, this will set the thread priority of the merging thread to `Thread.NORM_PRIORITY` plus this value within the bounds of `Thread.MIN_PRIORITY` and `Thread.MAX_PRIORITY`. A value of 0 indicates to not change the thread priority.|no (default = 0; inherit and do not override)|
 |reportParseExceptions|Boolean|If true, exceptions encountered during parsing will be thrown and will halt ingestion. If false, unparseable rows and fields will be skipped. If an entire row is skipped, the "unparseable" counter will be incremented. If some fields in a row were parseable and some were not, the parseable fields will be indexed and the "unparseable" counter will not be incremented.|false|
 
-Before enabling thread priority settings, users are highly encouraged to read the [original pull request](https://github.com/druid-io/druid/pull/984) and other documentation about proper use of `-XX:+UseThreadPriorities`. 
+启用线程前优先级设置，强烈建议用户阅读 [原始拉请求](https://github.com/druid-io/druid/pull/984)和其他关于适当使用`-XX:+UseThreadPriorities`的文档。
+#### 拒绝策略
 
-#### Rejection Policy
+以下的政策是有效的：
 
-The following policies are available:
+* `serverTime` &ndash;为“当前时间”数据推荐的政策，是适合当前数据实时生成和摄取的。使用 `windowPeriod`只接受那些事件窗口内的查找前和查找后。
+* `messageTime` &ndash;可以用于非“当前时间”只要数据是相对顺序。如果它们比最新时间戳`windowPeriod`事件少的话，事件将被拒绝。只有在一个事件发生后segmentGranularity和“windowPeriod”(手不会定期发生,除非你有源源不断的数据)才会切换。
+* `none` &ndash;所有的事件都被接受。从不切换数据除非在配置Firehoses时调用shutdown()。
 
-* `serverTime` &ndash; The recommended policy for "current time" data, it is optimal for current data that is generated and ingested in real time. Uses `windowPeriod` to accept only those events that are inside the window looking forward and back.
-* `messageTime` &ndash; Can be used for non-"current time" as long as that data is relatively in sequence. Events are rejected if they are less than `windowPeriod` from the event with the latest timestamp. Hand off only occurs if an event is seen after the segmentGranularity and `windowPeriod` (hand off will not periodically occur unless you have a constant stream of data).
-* `none` &ndash; All events are accepted. Never hands off data unless shutdown() is called on the configured firehose.
+#### Sharding分区
 
-
-#### Sharding
-
-Druid uses shards, or segments with partition numbers, to more efficiently handle large amounts of incoming data. In Druid, shards represent the segments that together cover a time interval based on the value of `segmentGranularity`. If, for example, `segmentGranularity` is set to "hour", then a number of shards may be used to store the data for that hour. Sharding along dimensions may also occur to optimize efficiency.
-
-Segments are identified by datasource, time interval, and version. With sharding, a segment is also identified by a partition number. Typically, each shard will have the same version but a different partition number to uniquely identify it.
-
-In small-data scenarios, sharding is unnecessary and can be set to none (the default):
-
+Druid使用分区，或者有分区号的段，为了更有效率的处理大量的引入数据。在Druid，分区代表段一起覆盖基于`segmentGranularity`值的一个时间间隔。
+例如，如果 `segmentGranularity`设置为“hour”,那么大量的分区可能用于存储数据。还可能出现分区沿着维度优化效率。
+段被数据源、时间间隔和版本识别。分片段也是由分区号识别。
+通常,每个碎片都有相同的版本,唯一地标识是一个不同的分区号。
+在较小的数据情况下,分片是不必要的,可以设置为none(默认):
 ```json
     "shardSpec": {"type": "none"}
 ```
 
-However, in scenarios with multiple realtime nodes, `none` is less useful as it cannot help with scaling data volume (see below). Note that for the batch indexing service, no explicit configuration is required; sharding is provided automatically.
+然而,在多个实时场景节点,`none`不太有用,因为它不能帮助扩展数据量(见下文)。注意,对于批处理索引服务,无需显式配置;分区是自动提供的。
 
-Druid uses sharding based on the `shardSpec` setting you configure. The recommended choices, `linear` and `numbered`, are discussed below; other types have been useful for internal Druid development but are not appropriate for production setups.
-
-Keep in mind, that sharding configuration has nothing to do with configured firehose. For example, if you set partition number to 0, it doesn't mean that Kafka firehose will consume only from 0 topic partition.
-
+Druid使用基于`shardSpec`分区设置你的配置。推荐选择，`linear`和`numberd`，下面有讲；其他类型对于内部Druid发展一直是有用的，但是不适用于生产设置。
+记住，分区配置对配置Firehoses没有影响。例如，如果你设置分区号为0，这并不意味着Kafka firehose将仅从0主题分区消耗。
 ##### Linear
 
-This strategy provides following advantages:
+这个策略有以下优点：
+* 当增加新节点时它不需要更新已存在节点的文件规范配置。
+* 独特的碎片都是查询,不管分区编号是不是连续的(它允许查询分区0和2,即使分区1缺失)。
 
-* There is no need to update the fileSpec configurations of existing nodes when adding new nodes.
-* All unique shards are queried, regardless of whether the partition numbering is sequential or not (it allows querying of partitions 0 and 2, even if partition 1 is missing).
-
-Configure `linear` under `schema`:
-
+`schema`下配置`linear`：
 ```json
     "shardSpec": {
         "type": "linear",
@@ -203,10 +185,8 @@ Configure `linear` under `schema`:
 
 ##### Numbered
 
-This strategy is similar to `linear` except that it does not tolerate non-sequential partition numbering (it will *not* allow querying of partitions 0 and 2 if partition 1 is missing). It also requires explicitly setting the total number of partitions.
-
-Configure `numbered` under `schema`:
-
+这种策略类似于`linear`,除了它不容忍非时序的分区编号(它将*不*允许查询分区0和2,如果分区1缺失)。它还需要显示设置分区的总数。
+`schema`下配置`numbered`：
 ```json
     "shardSpec": {
         "type": "numbered",
@@ -216,12 +196,11 @@ Configure `numbered` under `schema`:
 ```
      
 
-##### Scale and Redundancy
+##### 规模和冗余
 
-The `shardSpec` configuration can be used to create redundancy by having the same `partitionNum` values on different nodes.
+`shardSpec`配置可以在不同的节点上通过相同的`partionNum`值创建冗余。
 
-For example, if RealTimeNode1 has:
-
+例如，如果实时节点1有：
 ```json
     "shardSpec": {
         "type": "linear",
@@ -229,8 +208,7 @@ For example, if RealTimeNode1 has:
     }
 ```
             
-and RealTimeNode2 has:
-
+实时节点2有：
 ```json
     "shardSpec": {
         "type": "linear",
@@ -238,10 +216,9 @@ and RealTimeNode2 has:
     }
 ```
 
-then two realtime nodes can store segments with the same datasource, version, time interval, and partition number. Brokers that query for data in such segments will assume that they hold the same data, and the query will target only one of the segments.
+那么这两个实时节点可以用相同的数据源，版本，时间间隔，和分区号存储段。在这个段查询数据代理将假设拥有相同的数据，而且查询只针对其中一个段。
 
-`shardSpec` can also help achieve scale. For this, add nodes with a different `partionNum`. Continuing with the example, if RealTimeNode3 has:
-
+`shardSpec`也可以帮助实现规模。为此,添加节点有不同的`partionNum`。如例子,如果实时节点3有:
 ```json
     "shardSpec": {
         "type": "linear",
@@ -249,15 +226,15 @@ then two realtime nodes can store segments with the same datasource, version, ti
     }
 ```
 
-then it can store segments with the same datasource, time interval, and version as in the first two nodes, but with a different partition number. Brokers that query for data in such segments will assume that a segment from RealTimeNode3 holds *different* data, and the query will target it along with a segment from the first two nodes.
+那么它可以用相同的数据源,时间间隔,和在第一个两个节点版本,但是有不同的分区号存储段。
+在这个段查询数据代理将假设从实时节点3一个段拥有 *不同的* 数据，而且查询将针对这一段的前两个节点。
 
-You can use type `numbered` similarly. Note that type `none` is essentially type `linear` with all shards having a fixed `partitionNum` of 0.
+你可以使用类似`numbered`类型。注意`none`类型本质上是`linear`有所有分区有固定的`分区号`0。
 
-## Constraints
+## 约束
 
-The following table summarizes constraints between settings in the spec file for the Realtime subsystem.
-
-|Name|Effect|Minimum|Recommended|
+下表总结了设置的规范文件实时子系统之间的约束。
+|名称|影响|最小值|建议|
 |----|------|-------|-----------|
 |windowPeriod| When reading a row, events with timestamp older than now minus this window are discarded | time jitter tolerance | use this to reject outliers |
 |segmentGranularity| Time granularity (minute, hour, day, week, month) for loading data at query time | equal to indexGranularity| more than queryGranularity|
@@ -265,47 +242,31 @@ The following table summarizes constraints between settings in the spec file for
 |intermediatePersistPeriod| The max time (ISO8601 Period) between flushes of ingested rows from memory to disk | avoid excessive flushing | number of un-persisted rows in memory also constrained by maxRowsInMemory |
 |maxRowsInMemory| The max number of ingested rows to hold in memory before a flush to disk | number of un-persisted post-aggregation rows in memory is also constrained by intermediatePersistPeriod | use this to avoid running out of heap if too many rows in an intermediatePersistPeriod |
 
-The normal, expected use cases have the following overall constraints: `intermediatePersistPeriod ≤ windowPeriod < segmentGranularity` and `queryGranularity ≤ segmentGranularity`
-
-## Limitations
+通常情况下，希望用例有以下约束：`intermediatePersistPeriod ≤ windowPeriod < segmentGranularity`和 `queryGranularity ≤ segmentGranularity`
+## 局限
 
 ### Kafka
 
-Standalone realtime nodes use the Kafka high level consumer, which imposes a few restrictions.
+独立的实时节点使用Kafka高水平的消费者,这强加了一些限制。
 
-Druid replicates segment such that logically equivalent data segments are concurrently hosted on N nodes. If N–1 nodes go down, 
-the data will still be available for querying. On real-time nodes, this process depends on maintaining logically equivalent 
-data segments on each of the N nodes, which is not possible with standard Kafka consumer groups if your Kafka topic requires more than one consumer 
-(because consumers in different consumer groups will split up the data differently).
+Druid复制段,这样逻辑上等价的数据段同时托管在N个节点。如果n - 1节点下降，数据仍将用于查询。
+在实时节点，这个过程取决于保持逻辑上等价的每N个节点的数据段,这是不可能与标准Kafka消费者团体如果你的Kafka topic需要不止一个消费者(因为消费者不同的消费群体将分割数据不同)。
+ 
+例如,假设您的主题是跨越Kafka分区1、2 & 3和2实时节点线性碎片规格1 & 2。实时节点都是在相同的消费群体。实时节点1可能从1&3分区消耗数据，实时节点2可能从分区2消耗数据。通过代理查询你的数据将产生正确的结果。
 
-For example, let's say your topic is split across Kafka partitions 1, 2, & 3 and you have 2 real-time nodes with linear shard specs 1 & 2. 
-Both of the real-time nodes are in the same consumer group. Real-time node 1 may consume data from partitions 1 & 3, and real-time node 2 may consume data from partition 2. 
-Querying for your data through the broker will yield correct results.
+问题出现了,如果你想复制你的数据通过创建实时节点3和4。这些新的实时节点线性碎片规格1 & 2,他们将从Kafka使用不同的消费群体消费数据。在这种情况下,实时节点3可能消耗的数据分区1 & 2,和实时节点4可能消耗的数据分区2。
+从Druid的角度来看,部分由实时节点1和3是相同的,和数据由实时节点2和4是相同的,尽管他们在阅读不同Kafka的分区。查询的数据将产生不一致的结果。
 
-The problem arises if you want to replicate your data by creating real-time nodes 3 & 4. These new real-time nodes also 
-have linear shard specs 1 & 2, and they will consume data from Kafka using a different consumer group. In this case, 
-real-time node 3 may consume data from partitions 1 & 2, and real-time node 4 may consume data from partition 2. 
-From Druid's perspective, the segments hosted by real-time nodes 1 and 3 are the same, and the data hosted by real-time nodes 
-2 and 4 are the same, although they are reading from different Kafka partitions. Querying for the data will yield inconsistent 
-results.
+这是总是一个问题吗?不。如果您的数据是足够小,适合在一个Kafka分区,你可以复制不需要事件。否则,您可以运行实时节点没有复制。
+###锁定
 
-Is this always a problem? No. If your data is small enough to fit on a single Kafka partition, you can replicate without issues. 
-Otherwise, you can run real-time nodes without replication.
+使用流拉一起摄入与实时节点批摄入可能会引入数据覆盖问题。例如,如果你当天,产生每小时段和运行当天每日批处理作业的数据,创建的片段批处理作业将最新版本比大多数实时摄取所产生的片段。
+如果你的批处理作业是还没有完成的索引数据,由批处理作业创建的每日段，可以覆盖实时节点创建的最近的段。但是这样会丢失数据的一部分。
 
-### Locking
+### 模式改变
 
-Using stream pull ingestion with Realtime nodes together batch ingestion may introduce data override issues. For example, if you 
-are generating hourly segments for the current day, and run a daily batch job for the current day's data, the segments created by 
-the batch job will have a more recent version than most of the segments generated by realtime ingestion. If your batch job is indexing 
-data that isn't yet complete for the day, the daily segment created by the batch job can override recent segments created by 
-realtime nodes. A portion of data will appear to be lost in this case.
+独立的实时节点要求停止一个节点更新模式，然后再次启动该模式生效。
+这很难管理规模,尤其是在多个分区。
+### 日志管理
 
-### Schema changes
-
-Standalone realtime nodes require stopping a node to update a schema, and starting it up again for the schema to take effect. 
-This can be difficult to manage at scale, especially with multiple partitions.
-
-### Log management
-
-Each standalone realtime node has its own set of logs. Diagnosing errors across many partitions across many servers may be 
-difficult to manage and track at scale.
+每个独立的实时节点都有自己的日志。诊断错误跨多个服务器，跨多个分区在规模内难以管理和跟踪。
