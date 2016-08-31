@@ -2,18 +2,20 @@
 layout: doc_page
 ---
 
-# About Experimental Features
+# 关于试验特性
 
-Experimental features are features we have developed but have not fully tested in a production environment. If you choose to try them out, there will likely be edge cases that we have not covered. We would love feedback on any of these features, whether they are bug reports, suggestions for improvement, or letting us know they work as intended.
+实验功能特性是我们开发了，但还没有完全在生产环境中进行测试。
+如果你选择尝试,可能会有我们没有涉及到边界情况。
+我们希望您可以对这些特性进行反馈,无论是bug报告,建议改进,或者让我们知道它们的工作目的。
 
 <div class="note caution">
-APIs for experimental features may change in backwards incompatible ways.
+对于试验特性的APIs可能以不兼容的方式进行改变。
 </div>
 
-To enable experimental features, include their artifacts in the configuration runtime.properties file, e.g.,
+为了启动试验特性，把它们的工具包含在配置运行时属性文件中，如，
 
 ```
 druid.extensions.loadList=["druid-histogram"]
 ```
 
-The configuration files for all the indexer and query nodes need to be updated with this.
+所有的索引和查询节点的配置文件都需要用这个更新。

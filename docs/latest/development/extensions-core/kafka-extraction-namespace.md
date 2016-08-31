@@ -2,17 +2,15 @@
 layout: doc_page
 ---
 
-# Kafka Namespaced Lookup
+# Kafka 命名空间查找
 
 <div class="note caution">
-Lookups are an <a href="../experimental.html">experimental</a> feature.
+查找是一个<a href="../experimental.html">试验</a>特性.
 </div>
 
-Make sure to [include](../../operations/including-extensions.html) `druid-namespace-lookup` and `druid-kafka-extraction-namespace` as an extension.
-
-Note that this lookup does not employ a `pollPeriod`.
-
-If you need updates to populate as promptly as possible, it is possible to plug into a kafka topic whose key is the old value and message is the desired new value (both in UTF-8).\
+请确保 [包含](../../operations/including-extensions.html) `druid-namespace-lookup`和 `druid-kafka-extraction-namespace`作为一个扩展。
+注意这个查找不会使用`pollPeriod`。
+如果您需要尽可能迅速地更新填充,可以插入一个其键是旧值的kafka话题，而消息所需的是新值(也可以在utf-8)。
 
 ```json
 {
@@ -22,39 +20,40 @@ If you need updates to populate as promptly as possible, it is possible to plug 
 }
 ```
 
-|Parameter|Description|Required|Default|
+|参数|描述|要求|默认|
 |---------|-----------|--------|-------|
 |`namespace`|The namespace to define|Yes||
 |`kafkaTopic`|The kafka topic to read the data from|Yes||
 
-## Kafka renames
+## Kafka 重命名
 
-The extension `kafka-extraction-namespace` enables reading from a kafka feed which has name/key pairs to allow renaming of dimension values. An example use case would be to rename an ID to a human readable format.
+`kafka-extraction-namespace` 扩展使得有name/key搭配的kafka阅读允许对维度值进行重命名。
+例如去重命名一个ID为人们可以读懂的格式。
 
-Currently the historical node caches the key/value pairs from the kafka feed in an ephemeral memory mapped DB via MapDB.
+目前历史节点缓存的键/值对是从kafka通过MapDB进入一个短暂的内存映射。
 
-## Configuration
+## 配置
 
-The following options are used to define the behavior and should be included wherever the extension is included (all query servicing nodes):
+以下选项用于定义行为,应该包括扩展(所有查询服务节点)：
 
-|Property|Description|Default|
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.query.rename.kafka.properties`|A json map of kafka consumer properties. See below for special properties.|See below|
 
-The following are the handling for kafka consumer properties in `druid.query.rename.kafka.properties`
+下面的针对kafka用户`druid.query.rename.kafka.properties`属性的处理
 
-|Property|Description|Default|
+|属性|描述|默认|
 |--------|-----------|-------|
 |`zookeeper.connect`|Zookeeper connection string|`localhost:2181/kafka`|
 |`group.id`|Group ID, auto-assigned for publish-subscribe model and cannot be overridden|`UUID.randomUUID().toString()`|
 |`auto.offset.reset`|Setting to get the entire kafka rename stream. Cannot be overridden|`smallest`|
 
-## Testing the Kafka rename functionality
+## 测试kafka重命名功能
 
-To test this setup, you can send key/value pairs to a kafka stream via the following producer console:
+为了测试这项设置，你可以通过以下生产控制台发送键/值配对到kafka流：
 
 ```
 ./bin/kafka-console-producer.sh --property parse.key=true --property key.separator="->" --broker-list localhost:9092 --topic testTopic
 ```
 
-Renames can then be published as `OLD_VAL->NEW_VAL` followed by newline (enter or return)
+重命名可以在换行后（回车或者返回）发出`OLD_VAL->NEW_VAL`

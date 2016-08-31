@@ -2,24 +2,21 @@
 layout: doc_page
 ---
 
-# Namespaced Lookup
+# 命名空间查找
 
 <div class="note caution">
-Lookups are an <a href="../development/experimental.html">experimental</a> feature.
+查找是一个 <a href="../development/experimental.html">试验</a> 特性。
 </div>
 
-Make sure to [include](../../operations/including-extensions.html) `druid-namespace-lookup` as an extension.
+请确保[包含](../../operations/including-extensions.html) `druid-namespace-lookup`作为一个扩展。
+## Configuration配置
 
-## Configuration
-
-|Property|Description|Default|
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.lookup.snapshotWorkingDir`| Working path used to store snapshot of current lookup configuration, leaving this property null will disable snapshot/bootstrap utility|null|
 
-Namespaced lookups are appropriate for lookups which are not possible to pass at query time due to their size, 
-or are not desired to be passed at query time because the data is to reside in and be handled by the Druid servers. 
-Namespaced lookups can be specified as part of the runtime properties file. The property is a list of the namespaces 
-described as per the sections on this page. For example:
+命名空间适当地查找由于其尺寸不能在查询时通过, 或在查询时不期望通过,因为数据是驻留在Druid和被Druid服务器处理的。
+可以指定命名空间为运行属性文件的一部分。属性是这个页面每部分描述的一个命名空间列表。例如:
 
  ```json
  druid.query.extraction.namespace.lookups=
@@ -54,28 +51,25 @@ described as per the sections on this page. For example:
    ]
  ```
 
-Proper functionality of Namespaced lookups requires the following extension to be loaded on the broker, peon, and historical nodes: 
+适当的名称空查找功能需要加载以下扩展代理,劳工,和历史的节点:
 `druid-namespace-lookup`
 
-## Cache Settings
+## 缓存设置
 
-Lookups are cached locally on historical nodes. The following are settings used by the nodes which service queries when 
-setting namespaces (broker, peon, historical)
+查找是本地历史节点的缓存。下面的设置是使用了设置命名空间（代理，劳工，历史）的服务查询节点
 
-|Property|Description|Default|
+|属性|描述|默认|
 |--------|-----------|-------|
 |`druid.query.extraction.namespace.cache.type`|Specifies the type of caching to be used by the namespaces. May be one of [`offHeap`, `onHeap`]. `offHeap` uses a temporary file for off-heap storage of the namespace (memory mapped files). `onHeap` stores all cache on the heap in standard java map types.|`onHeap`|
 
-The cache is populated in different ways depending on the settings below. In general, most namespaces employ 
-a `pollPeriod` at the end of which time they poll the remote resource of interest for updates.
+缓存的填充方式取决于下面的设置。一般来说,大多数名称空间在结尾使用`pollPeriod`，他们调查远程资源的更新时间。
 
-# Supported Lookups
+# 支持查找
 
-For additional lookups, please see our [extensions list](../extensions.html).
+对于额外的查找，请查阅我们的[扩展列表](../extensions.html)。
+## URI 命名空间更新
 
-## URI namespace update
-
-The remapping values for each namespaced lookup can be specified by json as per
+每个名称空间查找重新映射值可以由每个json指定
 
 ```json
 {
@@ -91,28 +85,32 @@ The remapping values for each namespaced lookup can be specified by json as per
 }
 ```
 
-|Property|Description|Required|Default|
+|属性|描述|要求|默认|
 |--------|-----------|--------|-------|
 |`namespace`|The namespace to define|Yes||
 |`pollPeriod`|Period between polling for updates|No|0 (only once)|
 |`versionRegex`|Regex to help find newer versions of the namespace data|Yes||
 |`namespaceParseSpec`|How to interpret the data at the URI|Yes||
 
-The `pollPeriod` value specifies the period in ISO 8601 format between checks for updates. If the source of the lookup is capable of providing a timestamp, the lookup will only be updated if it has changed since the prior tick of `pollPeriod`. A value of 0, an absent parameter, or `null` all mean populate once and do not attempt to update. Whenever an update occurs, the updating system will look for a file with the most recent timestamp and assume that one with the most recent data.
+`pollPeriod`值指定在检查更新之间ISO 8601格式的期间。如果查找的资源可以提供时间戳，查找将只有在改变`pollPeriod`优先权后才更新。
+值为0时，当作缺省参数，或者`null`意思是填充一次,不要试图更新。
+当更新时，更新系统将查找一个最近的时间戳并假设是最近的数据的文件。
 
-The `versionRegex` value specifies a regex to use to determine if a filename in the parent path of the uri should be considered when trying to find the latest version. Omitting this setting or setting it equal to `null` will match to all files it can find (equivalent to using `".*"`). The search occurs in the most significant "directory" of the uri.
+`versionRegex`值指定一个正则表达式来确定当试图找到最新版本时，uri的父路径文件名是否应该考虑。
+省略此设置或设置它等于`null`将匹配所有文件能找到(相当于使用`".*"`)。搜索是uri中最重要的“目录”。
 
-The `namespaceParseSpec` can be one of a number of values. Each of the examples below would rename foo to bar, baz to bat, and buck to truck. All parseSpec types assumes each input is delimited by a new line. See below for the types of parseSpec supported.
+`namespaceParseSpec`可以是一个数值。下面的例子将重命名foo为bar,baz为bat，还有buck为truck。
+所有parseSpec类型假设每个输入由一个新行分隔。见下文parseSpec类型的支持。
 
 ### csv lookupParseSpec
 
-|Parameter|Description|Required|Default|
+|参数|描述|要求|默认|
 |---------|-----------|--------|-------|
 |`columns`|The list of columns in the csv file|yes|`null`|
 |`keyColumn`|The name of the column containing the key|no|The first column|
 |`valueColumn`|The name of the column containing the value|no|The second column|
 
-*example input*
+*输入示例*
 
 ```
 bar,something,foo
@@ -120,7 +118,7 @@ bat,something2,baz
 truck,something3,buck
 ```
 
-*example namespaceParseSpec*
+*namespaceParseSpec示例*
 
 ```json
 "namespaceParseSpec": {
@@ -140,8 +138,7 @@ truck,something3,buck
 |`valueColumn`|The name of the column containing the value|no|The second column|
 |`delimiter`|The delimiter in the file|no|tab (`\t`)|
 
-
-*example input*
+*输入示例*
 
 ```
 bar|something,1|foo
@@ -149,7 +146,7 @@ bat|something,2|baz
 truck|something,3|buck
 ```
 
-*example namespaceParseSpec*
+*namespaceParseSpec示例*
 
 ```json
 "namespaceParseSpec": {
@@ -161,14 +158,14 @@ truck|something,3|buck
 }
 ```
 
-### customJson lookupParseSpec
+### 自定义Json lookupParseSpec
 
 |Parameter|Description|Required|Default|
 |---------|-----------|--------|-------|
 |`keyFieldName`|The field name of the key|yes|null|
 |`valueFieldName`|The field name of the value|yes|null|
 
-*example input*
+*输入示例*
 
 ```json
 {"key": "foo", "value": "bar", "somethingElse" : "something"}
@@ -176,7 +173,7 @@ truck|something,3|buck
 {"key": "buck", "somethingElse": "something", "value": "truck"}
 ```
 
-*example namespaceParseSpec*
+*namespaceParseSpec示例*
 
 ```json
 "namespaceParseSpec": {
@@ -188,9 +185,10 @@ truck|something,3|buck
 
 
 ### simpleJson lookupParseSpec
-The `simpleJson` lookupParseSpec does not take any parameters. It is simply a line delimited json file where the field is the key, and the field's value is the value.
 
-*example input*
+`simpleJson` lookupParseSpec不需要任何参数。它是简单的一个行分隔的json文件，其字段的位置是键,和字段的值是值。
+
+*输入示例*
  
 ```json
 {"foo": "bar"}
@@ -198,7 +196,7 @@ The `simpleJson` lookupParseSpec does not take any parameters. It is simply a li
 {"buck": "truck"}
 ```
 
-*example namespaceParseSpec*
+*namespaceParseSpec示例*
 
 ```json
 "namespaceParseSpec":{
@@ -206,11 +204,13 @@ The `simpleJson` lookupParseSpec does not take any parameters. It is simply a li
 }
 ```
 
-## JDBC namespaced lookup
+## JDBC 命名空间查找
 
-The JDBC lookups will poll a database to populate its local cache. If the `tsColumn` is set it must be able to accept comparisons in the format `'2015-01-01 00:00:00'`. For example, the following must be valid sql for the table `SELECT * FROM some_lookup_table WHERE timestamp_column >  '2015-01-01 00:00:00'`. If `tsColumn` is set, the caching service will attempt to only poll values that were written *after* the last sync. If `tsColumn` is not set, the entire table is pulled every time.
+JDBC查找将选择数据库填充它的本地缓存。如果设置了`tsColumn`,则它必须能够接受`'2015-01-01 00:00:00'`格式。
+例如，下面必须是有效的表格sql语句 `SELECT * FROM some_lookup_table WHERE timestamp_column >  '2015-01-01 00:00:00'`。
+如果设置了`tsColumn`，缓存服务将尝试只选择最后同步的写为*after*的值。如果没有设置`tsColumn`，则每次都会拉动整个表格。
 
-|Parameter|Description|Required|Default|
+|参数|描述|要求|默认|
 |---------|-----------|--------|-------|
 |`namespace`|The namespace to define|Yes||
 |`connectorConfig`|The connector config to use|Yes||
